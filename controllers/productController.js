@@ -1,4 +1,4 @@
-const sharp = require("sharp");
+// const sharp = require("sharp");
 const { v4: uuidv4 } = require("uuid");
 const asyncHandler = require("express-async-handler");
 
@@ -32,11 +32,11 @@ exports.resizeProductImages = asyncHandler(async (req, res, next) => {
   if (req.files.imageCover) {
     const ext = req.files.imageCover[0].mimetype.split("/")[1];
     const imageCoverFilename = `products-${uuidv4()}-${Date.now()}-cover.${ext}`;
-    await sharp(req.files.imageCover[0].buffer)
-      // .resize(2000, 1333)
-      // .toFormat('jpeg')
-      // .jpeg({ quality: 90 })
-      .toFile(`uploads/products/${imageCoverFilename}`); // write into a file on the disk
+    // await sharp(req.files.imageCover[0].buffer)
+    // .resize(2000, 1333)
+    // .toFormat('jpeg')
+    // .jpeg({ quality: 90 })
+    // .toFile(`uploads/products/${imageCoverFilename}`); // write into a file on the disk
 
     // Save imageCover into database
     req.body.imageCover = imageCoverFilename;
@@ -50,11 +50,11 @@ exports.resizeProductImages = asyncHandler(async (req, res, next) => {
         const filename = `products-${uuidv4()}-${Date.now()}-${
           index + 1
         }.${ext}`;
-        await sharp(img.buffer)
-          // .resize(800, 800)
-          // .toFormat('jpeg')
-          // .jpeg({ quality: 90 })
-          .toFile(`uploads/products/${filename}`);
+        // await sharp(img.buffer)
+        // .resize(800, 800)
+        // .toFormat('jpeg')
+        // .jpeg({ quality: 90 })
+        // .toFile(`uploads/products/${filename}`);
 
         // Save images into database
         req.body.images.push(filename);

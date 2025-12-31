@@ -1,4 +1,3 @@
-const sharp = require("sharp");
 const { v4: uuidv4 } = require("uuid");
 const asyncHandler = require("express-async-handler");
 
@@ -16,11 +15,11 @@ exports.resizeImage = asyncHandler(async (req, res, next) => {
   const ext = req.file.mimetype.split("/")[1];
   const filename = `brand-${uuidv4()}-${Date.now()}.${ext}`;
 
-  await sharp(req.file.buffer)
-    // .resize(500, 500)
-    // .toFormat('jpeg')
-    // .jpeg({ quality: 90 })
-    .toFile(`uploads/brands/${filename}`); // write into a file on the disk
+  // await sharp(req.file.buffer)
+  //   // .resize(500, 500)
+  //   // .toFormat('jpeg')
+  //   // .jpeg({ quality: 90 })
+  //   .toFile(`uploads/brands/${filename}`); // write into a file on the disk
 
   req.body.image = filename;
   next();
