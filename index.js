@@ -83,6 +83,9 @@ app.all("*", (req, res, next) => {
 app.use(globalError);
 
 const PORT = process.env.PORT || 8000;
+app.get("/", (req, res) => {
+  res.json({ message: `server is running in PORT: ${PORT}` });
+});
 const server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`.green);
 });
