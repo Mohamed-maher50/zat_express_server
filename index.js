@@ -32,7 +32,7 @@ const app = express();
 app.use(cors());
 app.options("*", cors());
 app.enable("trust proxy");
-
+toobusy.maxLag(70); // جرب تزوده شوية
 // Toobusy middleware for server load management
 app.use((req, res, next) => {
   if (toobusy()) {
@@ -69,6 +69,7 @@ mountRoutes(app);
 const PORT = process.env.PORT || 8000;
 
 app.get("/", (req, res) => {
+  console.log("Lag:", toobusy.lag());
   res.json({ message: `server is running in PORT: ${PORT}` });
 });
 // 404 - Route not found
