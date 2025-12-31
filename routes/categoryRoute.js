@@ -1,5 +1,5 @@
-const express = require('express');
-const {
+import express from "express";
+import {
   getCategories,
   createCategory,
   getCategory,
@@ -8,26 +8,27 @@ const {
   uploadCategoryImage,
   resizeImage,
   deleteAll,
-} = require('../controllers/categoryController');
-const {
+} from "../controllers/categoryController.js";
+
+import {
   createCategoryValidator,
   getCategoryValidator,
   updateCategoryValidator,
   deleteCategoryValidator,
-} = require('../utils/validators/categoryValidator');
-const authController = require('../controllers/authController');
+} from "../utils/validators/categoryValidator.js";
 
-const subCategoryRoute = require('./subCategoryRoute');
+import * as authController from "../controllers/authController.js";
+import subCategoryRoute from "./subCategoryRoute.js";
 
 const router = express.Router();
-router.use('/:categoryId/subcategories', subCategoryRoute);
+router.use("/:categoryId/subcategories", subCategoryRoute);
 
 router
-  .route('/')
+  .route("/")
   .get(getCategories)
   .post(
     authController.auth,
-    authController.allowedTo('admin', 'manager'),
+    authController.allowedTo("admin", "manager"),
     uploadCategoryImage,
     resizeImage,
     createCategoryValidator,
@@ -36,11 +37,11 @@ router
   .delete(deleteAll);
 
 router
-  .route('/:id')
+  .route("/:id")
   .get(getCategoryValidator, getCategory)
   .put(
     authController.auth,
-    authController.allowedTo('admin', 'manager'),
+    authController.allowedTo("admin", "manager"),
     uploadCategoryImage,
     resizeImage,
     updateCategoryValidator,
@@ -48,9 +49,9 @@ router
   )
   .delete(
     authController.auth,
-    authController.allowedTo('admin'),
+    authController.allowedTo("admin"),
     deleteCategoryValidator,
     deleteCategory
   );
 
-module.exports = router;
+export default router;

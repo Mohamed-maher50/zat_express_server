@@ -1,5 +1,4 @@
-const nodemailer = require('nodemailer');
-
+import nodemailer from "nodemailer";
 // Path options as argument like : {email address, subject, email content and others}
 const sendEmail = async (options) => {
   //  1) Create a transporter (transporter is the service that will send email like gmail, sendGrid and Mailgun)
@@ -20,7 +19,7 @@ const sendEmail = async (options) => {
 
   // 2) Define the email options
   const mailOptions = {
-    from: 'E-shop App <boghdady107@gmail.com>',
+    from: "E-shop App <boghdady107@gmail.com>",
     to: options.email,
     subject: options.subject,
     text: options.message,
@@ -30,5 +29,4 @@ const sendEmail = async (options) => {
   // 3) Actually send the email
   await transporter.sendMail(mailOptions);
 };
-
-module.exports = sendEmail;
+export default sendEmail;

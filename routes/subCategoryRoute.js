@@ -1,5 +1,5 @@
-const express = require("express");
-const {
+import express from "express";
+import {
   getSubCategories,
   createSubCategory,
   getSubCategory,
@@ -7,18 +7,16 @@ const {
   deleteSubCategory,
   setCategoryIdBody,
   createFilterObj,
-} = require("../controllers/subCategoryController");
-const {
+} from "../controllers/subCategoryController.js";
+import {
   createSubCategoryValidator,
   getSubCategoryValidator,
   updateSubCategoryValidator,
   deleteSubCategoryValidator,
-} = require("../utils/validators/subCategoryValidator");
+} from "../utils/validators/subCategoryValidator.js";
 
-const authController = require("../controllers/authController");
-const {
-  executeDeletedMiddleware,
-} = require("../middlewares/softDeleteMiddleware");
+import * as authController from "../controllers/authController.js";
+import { executeDeletedMiddleware } from "../middlewares/softDeleteMiddleware.js";
 
 // mergeParams: allow us to access parameters on other routers
 // ex: we access categoryId from category router
@@ -49,5 +47,4 @@ router
     deleteSubCategoryValidator,
     deleteSubCategory
   );
-
-module.exports = router;
+export default router;

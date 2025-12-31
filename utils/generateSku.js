@@ -1,5 +1,10 @@
-const { customAlphabet } = require("nanoid");
+import { customAlphabet } from "nanoid";
 
-// Define alphabet (Uppercase only) and SKU length (e.g., 10 characters)
+// Define alphabet (Uppercase + numbers) and SKU length (10 characters)
 const generateSku = customAlphabet("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ", 10);
-module.exports = { generateSku };
+
+// eslint-disable-next-line import/prefer-default-export
+export { generateSku };
+
+// Or use default export if preferred:
+// export default generateSku;

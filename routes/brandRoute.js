@@ -1,5 +1,5 @@
-const express = require("express");
-const {
+import express from "express";
+import {
   getBrands,
   createBrand,
   getBrand,
@@ -8,18 +8,17 @@ const {
   uploadBrandImage,
   resizeImage,
   deleteAll,
-} = require("../controllers/brandController");
-const {
+} from "../controllers/brandController.js";
+
+import {
   createBrandValidator,
   getBrandValidator,
   updateBrandValidator,
   deleteBrandValidator,
-} = require("../utils/validators/brandValidator");
+} from "../utils/validators/brandValidator.js";
 
-const authController = require("../controllers/authController");
-const {
-  executeDeletedMiddleware,
-} = require("../middlewares/softDeleteMiddleware");
+import * as authController from "../controllers/authController.js";
+import { executeDeletedMiddleware } from "../middlewares/softDeleteMiddleware.js";
 
 const router = express.Router();
 
@@ -55,4 +54,4 @@ router
     deleteBrand
   );
 
-module.exports = router;
+export default router;

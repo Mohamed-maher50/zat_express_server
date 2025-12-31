@@ -1,13 +1,11 @@
-const slugify = require("slugify");
-const { check, body } = require("express-validator");
+import slugify from "slugify";
+import { check, body } from "express-validator";
+import { validatorMiddleware } from "../../middlewares/validatorMiddleware.js";
+import Category from "../../models/categoryModel.js";
+import SubCategory from "../../models/subCategoryModel.js";
 
-const {
-  validatorMiddleware,
-} = require("../../middlewares/validatorMiddleware");
-const Category = require("../../models/categoryModel");
-const SubCategory = require("../../models/subCategoryModel");
-
-exports.createProductValidator = [
+// Create Product Validator
+export const createProductValidator = [
   body("images")
     .isArray({ min: 1 })
     .withMessage("At least one image is required"),
@@ -18,21 +16,22 @@ exports.createProductValidator = [
     .withMessage("Invalid image URL"),
   body("images.*.alt").optional().isString().trim(),
   body("images.*.id").optional().isString(),
+
   check("options")
     .isArray({ min: 1 })
-    .withMessage("options must be at least one"),
+    .withMessage("options must have at least one item"),
   body("options.*.name")
     .notEmpty()
     .withMessage("Option name is required")
     .isString()
     .withMessage("Option name must be a string"),
-
   body("options.*.values")
     .isArray({ min: 1 })
     .withMessage("Option values must be a non-empty array"),
+
   check("variants")
     .isArray({ min: 1 })
-    .withMessage("At least one variant required")
+    .withMessage("At least one variant is required")
     .custom((variants, { req }) => {
       const optionsMap = Object.fromEntries(
         req.body.options.map((opt) => [opt.name, opt.values])
@@ -63,13 +62,9 @@ exports.createProductValidator = [
     .withMessage("Image URL is required")
     .isString()
     .withMessage("Image URL must be a string"),
-
-  body("variants.*.images.*.id")
-    .optional()
-    .isString()
-    .withMessage("Image id must be a string if provided"),
+  body("variants.*.images.*.id").optional().isString(),
   body("variants.*.stock").isInt({ min: 0 }).withMessage("Stock must be >= 0"),
-  body("variants.*.attributes").custom((attr, { req }) => {
+  body("variants.*.attributes").custom((attr) => {
     if (!attr || Object.keys(attr).length === 0)
       throw new Error("Attributes required");
     return true;
@@ -79,7 +74,7 @@ exports.createProductValidator = [
     .isLength({ min: 3 })
     .withMessage("must be at least 3 chars")
     .notEmpty()
-    .withMessage("Product required")
+    .withMessage("Product title is required")
     .custom((val, { req }) => {
       req.body.slug = slugify(val);
       return true;
@@ -96,8 +91,6 @@ exports.createProductValidator = [
     .withMessage("Product imageCover is required")
     .isObject()
     .withMessage("imageCover must be an object"),
-
-  // imageCover.url
   body("imageCover.url")
     .notEmpty()
     .withMessage("imageCover url is required")
@@ -105,62 +98,53 @@ exports.createProductValidator = [
     .withMessage("imageCover url must be a string")
     .isURL()
     .withMessage("imageCover url must be a valid URL"),
+  body("imageCover.id").optional().isString(),
 
-  // imageCover.id (Cloudinary public_id)
-  body("imageCover.id")
-    .optional()
-    .isString()
-    .withMessage("imageCover id must be a string"),
-
-  // 1- check if category exist in our db
   check("category")
     .notEmpty()
-    .withMessage("Product must be belong to a category")
+    .withMessage("Product must belong to a category")
     .isMongoId()
-    .withMessage("Invalid ID formate")
+    .withMessage("Invalid ID format")
     .custom((categoryId) =>
       Category.findById(categoryId).then((category) => {
         if (!category) {
           return Promise.reject(
-            new Error(`No category exist for this id: ${categoryId}`)
-          );
-        }
-      })
-    ),
-  // 2- Check if subcategories exist in our db
-  // 3- check if subcategories belong to category
-  check("subcategory")
-    .optional()
-    .toArray()
-    .custom((subcategoriesIds) =>
-      SubCategory.find({
-        _id: { $exists: true, $in: subcategoriesIds },
-      }).then((results) => {
-        if (results.length < 1 || subcategoriesIds.length !== results.length) {
-          return Promise.reject(new Error("Invalid subcategories Ids"));
-        }
-      })
-    )
-    .custom((val, { req }) =>
-      SubCategory.find({
-        category: req.body.category,
-      }).then((subcategories) => {
-        // check if subcategories in body the same subcategories in category
-        const subIdsInDB = [];
-        subcategories.forEach((subcategory) => {
-          subIdsInDB.push(subcategory._id.toString());
-        });
-        const checker = (arr, target) => target.every((t) => arr.includes(t));
-        // console.log(checker(subIdsInDB, val));
-        if (!checker(subIdsInDB, val)) {
-          return Promise.reject(
-            new Error("Subcategory not belong to category")
+            new Error(`No category exists for this id: ${categoryId}`)
           );
         }
       })
     ),
 
-  check("brand").optional().isMongoId().withMessage("Invalid ID formate"),
+  check("subcategory")
+    .optional()
+    .toArray()
+    .custom((subcategoriesIds) =>
+      SubCategory.find({ _id: { $exists: true, $in: subcategoriesIds } }).then(
+        (results) => {
+          if (
+            results.length < 1 ||
+            subcategoriesIds.length !== results.length
+          ) {
+            return Promise.reject(new Error("Invalid subcategory IDs"));
+          }
+        }
+      )
+    )
+    .custom((val, { req }) =>
+      SubCategory.find({ category: req.body.category }).then(
+        (subcategories) => {
+          const subIdsInDB = subcategories.map((s) => s._id.toString());
+          const checker = (arr, target) => target.every((t) => arr.includes(t));
+          if (!checker(subIdsInDB, val)) {
+            return Promise.reject(
+              new Error("Subcategory does not belong to the selected category")
+            );
+          }
+        }
+      )
+    ),
+
+  check("brand").optional().isMongoId().withMessage("Invalid ID format"),
 
   check("ratingsAverage")
     .optional()
@@ -179,13 +163,15 @@ exports.createProductValidator = [
   validatorMiddleware,
 ];
 
-exports.getProductValidator = [
-  check("id").isMongoId().withMessage("Invalid ID formate"),
+// Get Product Validator
+export const getProductValidator = [
+  check("id").isMongoId().withMessage("Invalid ID format"),
   validatorMiddleware,
 ];
 
-exports.updateProductValidator = [
-  check("id").isMongoId().withMessage("Invalid ID formate"),
+// Update Product Validator
+export const updateProductValidator = [
+  check("id").isMongoId().withMessage("Invalid ID format"),
   body("title")
     .optional()
     .custom((val, { req }) => {
@@ -195,7 +181,8 @@ exports.updateProductValidator = [
   validatorMiddleware,
 ];
 
-exports.deleteProductValidator = [
-  check("id").isMongoId().withMessage("Invalid ID formate"),
+// Delete Product Validator
+export const deleteProductValidator = [
+  check("id").isMongoId().withMessage("Invalid ID format"),
   validatorMiddleware,
 ];

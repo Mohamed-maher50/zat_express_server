@@ -1,5 +1,5 @@
-const express = require("express");
-const {
+import express from "express";
+import {
   getUser,
   createUser,
   getUsers,
@@ -10,8 +10,9 @@ const {
   updateLoggedUserData,
   getLoggedUserData,
   deleteLoggedUser,
-} = require("../controllers/userController");
-const {
+} from "../controllers/userController.js";
+
+import {
   createUserValidator,
   updateUserValidator,
   deleteUserValidator,
@@ -19,15 +20,14 @@ const {
   changeUserPasswordValidator,
   changeLoggedUserPassValidator,
   updateLoggedUserValidator,
-} = require("../utils/validators/userValidator");
-const authController = require("../controllers/authController");
-const {
-  executeDeletedMiddleware,
-} = require("../middlewares/softDeleteMiddleware");
+} from "../utils/validators/userValidator.js";
+
+import * as authController from "../controllers/authController.js";
+import { executeDeletedMiddleware } from "../middlewares/softDeleteMiddleware.js";
 
 const router = express.Router();
 
-// user
+// Logged-in user routes
 router.put(
   "/changeMyPassword",
   authController.auth,
@@ -41,6 +41,7 @@ router.put(
   updateLoggedUserValidator,
   updateLoggedUserData
 );
+
 router.get(
   "/getMe",
   authController.auth,
@@ -48,14 +49,16 @@ router.get(
   executeDeletedMiddleware,
   getUser
 );
+
 router.delete("/deleteMe", authController.auth, deleteLoggedUser);
 
-// Admin
+// Admin routes
 router.put(
   "/change-password/:id",
   changeUserPasswordValidator,
   updateUserPassword
 );
+
 router
   .route("/")
   .get(authController.auth, authController.allowedTo("admin"), getUsers)
@@ -87,4 +90,4 @@ router
     deleteUser
   );
 
-module.exports = router;
+export default router;

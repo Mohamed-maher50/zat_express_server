@@ -1,4 +1,5 @@
-const mongoose = require("mongoose");
+// eslint-disable-next-line import/no-import-module-exports
+import mongoose from "mongoose";
 
 const CartItemSchema = new mongoose.Schema(
   {
@@ -102,6 +103,6 @@ cartSchema.pre("save", function (next) {
 //   });
 //   next();
 // });
-
-module.exports = mongoose.model("Cart", cartSchema);
-module.exports.CartItemSchema = CartItemSchema;
+const Cart = mongoose.model("Cart", cartSchema);
+export default Cart;
+export { CartItemSchema };

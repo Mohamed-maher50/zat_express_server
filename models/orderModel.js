@@ -1,9 +1,9 @@
-const mongoose = require("mongoose");
-const { nanoid } = require("nanoid");
-const { CartItemSchema } = require("./cartModel");
+import mongoose from "mongoose";
+import { nanoid } from "nanoid";
+import { CartItemSchema } from "./cartModel.js";
 // const autoIncrement = require('mongoose-auto-increment');
 // npm install --save --legacy-peer-deps mongoose-auto-increment
-const connection = mongoose.createConnection(process.env.DB_URI);
+// const connection = mongoose.createConnection(process.env.DB_URI);
 // autoIncrement.initialize(connection);
 
 const orderSchema = new mongoose.Schema(
@@ -82,4 +82,5 @@ orderSchema.pre("save", function (next) {
 //   incrementBy: 1,
 // });
 
-module.exports = mongoose.model("Order", orderSchema);
+const Order = mongoose.model("Order", orderSchema);
+export default Order;

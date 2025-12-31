@@ -1,5 +1,5 @@
-const express = require("express");
-const {
+import express from "express";
+import {
   getReview,
   getReviews,
   updateReview,
@@ -7,19 +7,16 @@ const {
   deleteReview,
   setProductAndUserIds,
   createFilterObj,
-} = require("../controllers/reviewController");
-
-const {
+} from "../controllers/reviewController.js";
+import {
   createReviewValidator,
   getReviewValidator,
   updateReviewValidator,
   deleteReviewValidator,
-} = require("../utils/validators/reviewValidator");
+} from "../utils/validators/reviewValidator.js";
 
-const authController = require("../controllers/authController");
-const {
-  executeDeletedMiddleware,
-} = require("../middlewares/softDeleteMiddleware");
+import * as authController from "../controllers/authController.js";
+import { executeDeletedMiddleware } from "../middlewares/softDeleteMiddleware.js";
 
 const router = express.Router({ mergeParams: true });
 
@@ -49,5 +46,4 @@ router
     deleteReviewValidator,
     deleteReview
   );
-
-module.exports = router;
+export default router;

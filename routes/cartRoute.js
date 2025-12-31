@@ -1,19 +1,19 @@
-const express = require("express");
-const {
+import express from "express";
+import {
   addProductToCart,
   updateCartProductCount,
   getLoggedUserCart,
   removeCartProduct,
   clearLoggedUserCart,
   applyCouponToCart,
-} = require("../controllers/cartService");
+} from "../controllers/cartService.js";
 
-const authController = require("../controllers/authController");
-const {
+import * as authController from "../controllers/authController.js";
+import {
   createItemValidator,
   removeItemValidator,
   updateItemValidator,
-} = require("../utils/validators/cartValidator");
+} from "../utils/validators/cartValidator.js";
 
 const router = express.Router();
 
@@ -35,4 +35,4 @@ router
   .put(updateItemValidator, updateCartProductCount)
   .delete(removeItemValidator, removeCartProduct);
 
-module.exports = router;
+export default router;

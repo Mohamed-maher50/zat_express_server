@@ -1,24 +1,24 @@
-const express = require('express');
-const {
+import express from "express";
+import {
   signup,
   login,
   forgotPassword,
   verifyPasswordResetCode,
   resetPassword,
-} = require('../controllers/authController');
+} from "../controllers/authController.js";
 
-const {
+import {
   signupValidator,
   loginValidator,
-} = require('../utils/validators/authValidator');
+} from "../utils/validators/authValidator.js";
 
 const router = express.Router();
 
-router.post('/signup', signupValidator, signup);
-router.post('/login', loginValidator, login);
+router.post("/signup", signupValidator, signup);
+router.post("/login", loginValidator, login);
 
-router.post('/forgotPasswords', forgotPassword);
-router.post('/verifyResetCode', verifyPasswordResetCode);
-router.put('/resetPassword', resetPassword);
+router.post("/forgotPasswords", forgotPassword);
+router.post("/verifyResetCode", verifyPasswordResetCode);
+router.put("/resetPassword", resetPassword);
 
-module.exports = router;
+export default router;

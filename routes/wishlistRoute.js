@@ -1,19 +1,18 @@
-const express = require('express');
-const {
+import express from "express";
+import {
   addProductToWishlist,
   removeProductFromWishlist,
   myWishlist,
-} = require('../controllers/wishlistController');
+} from "../controllers/wishlistController.js";
 
-const authController = require('../controllers/authController');
+import * as authController from "../controllers/authController.js";
 
 const router = express.Router();
 
 router
-  .route('/')
+  .route("/")
   .post(authController.auth, addProductToWishlist)
   .get(authController.auth, myWishlist);
 
-router.delete('/:productId', authController.auth, removeProductFromWishlist);
-
-module.exports = router;
+router.delete("/:productId", authController.auth, removeProductFromWishlist);
+export default router;

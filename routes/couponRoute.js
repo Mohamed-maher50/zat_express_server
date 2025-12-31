@@ -1,20 +1,20 @@
-const express = require('express');
-const {
+import express from "express";
+import {
   getCoupon,
   getCoupons,
   createCoupon,
   updateCoupon,
   deleteCoupon,
-} = require('../controllers/couponController');
+} from "../controllers/couponController.js";
 
-const authController = require('../controllers/authController');
+import * as authController from "../controllers/authController.js";
 
 const router = express.Router();
 
-router.use(authController.auth, authController.allowedTo('admin', 'manager'));
+router.use(authController.auth, authController.allowedTo("admin", "manager"));
 
-router.route('/').get(getCoupons).post(createCoupon);
+router.route("/").get(getCoupons).post(createCoupon);
 
-router.route('/:id').get(getCoupon).put(updateCoupon).delete(deleteCoupon);
+router.route("/:id").get(getCoupon).put(updateCoupon).delete(deleteCoupon);
 
-module.exports = router;
+export default router;

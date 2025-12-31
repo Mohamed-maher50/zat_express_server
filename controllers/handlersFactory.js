@@ -1,54 +1,58 @@
-const asyncHandler = require("express-async-handler");
-const ApiError = require("../utils/apiError");
-const ApiFeatures = require("../utils/apiFeatures");
+import asyncHandler from "express-async-handler";
+import ApiError from "../utils/apiError.js";
+import ApiFeatures from "../utils/apiFeatures.js";
 
+// Helper function to set image URLs for documents
 const setImageUrl = (doc) => {
   if (doc.imageCover) {
-    //${process.env.BASE_URL}/products/
-    const imageCoverUrl = `${doc.imageCover}`;
-    doc.imageCover = imageCoverUrl;
+    doc.imageCover = `${doc.imageCover}`;
   }
   if (doc.images) {
-    const images = [];
-    doc.images.forEach((image) => {
-      //${process.env.BASE_URL}/products/
-      const imageUrl = `${image}`;
-      images.push(imageUrl);
-    });
-    doc.images = images;
+    doc.images = doc.images.map((image) => `${image}`);
   }
 };
-exports.softDeleteOne = (Model) =>
+
+// Helper function to check if document is a Product
+const isProduct = (doc) => doc.constructor.modelName === "Product";
+
+// Helper function to check if model is products collection
+const isProductsCollection = (Model) =>
+  Model.collection.collectionName === "products";
+
+// @desc    Soft delete a document (sets isDeleted: true)
+export const softDeleteOne = (Model) =>
   asyncHandler(async (req, res, next) => {
     const document = await Model.findByIdAndUpdate(req.params.id, {
       isDeleted: true,
     });
 
     if (!document) {
-      next(
+      return next(
         new ApiError(`No document found for this id: ${req.params.id}`, 404)
       );
     }
 
-    // 204 no content
     res.status(204).send();
   });
-exports.deleteOne = (Model) =>
+
+// @desc    Permanently delete a document
+export const deleteOne = (Model) =>
   asyncHandler(async (req, res, next) => {
     const document = await Model.findByIdAndDelete(req.params.id);
 
     if (!document) {
-      next(
+      return next(
         new ApiError(`No document found for this id: ${req.params.id}`, 404)
       );
     }
-    // To trigger 'remove' event when delete document
+
+    // Trigger 'remove' event when delete document
     document.remove();
-    // 204 no content
     res.status(204).send();
   });
 
-exports.updateOne = (Model) =>
+// @desc    Update a single document
+export const updateOne = (Model) =>
   asyncHandler(async (req, res, next) => {
     const document = await Model.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
@@ -60,28 +64,33 @@ exports.updateOne = (Model) =>
       );
     }
 
-    // To trigger 'save' event when update document
+    // Trigger 'save' event when update document
     const doc = await document.save();
 
-    if (doc.constructor.modelName === "Product") {
+    if (isProduct(doc)) {
       setImageUrl(doc);
     }
+
     res.status(200).json({ data: doc });
   });
 
-exports.createOne = (Model) =>
+// @desc    Create a new document
+export const createOne = (Model) =>
   asyncHandler(async (req, res) => {
     const newDoc = await Model.create(req.body);
 
-    if (newDoc.constructor.modelName === "Product") {
+    if (isProduct(newDoc)) {
       setImageUrl(newDoc);
     }
+
     res.status(201).json({ data: newDoc });
   });
 
-exports.getOne = (Model, populateOpts) =>
+// @desc    Get a single document by ID
+export const getOne = (Model, populateOpts) =>
   asyncHandler(async (req, res, next) => {
     const { id } = req.params;
+
     // Build query
     let query = Model.findById(id);
     if (populateOpts) query = query.populate(populateOpts);
@@ -93,28 +102,29 @@ exports.getOne = (Model, populateOpts) =>
       return next(new ApiError(`No document for this id ${id}`, 404));
     }
 
-    if (document.constructor.modelName === "Product") {
+    if (isProduct(document)) {
       setImageUrl(document);
     }
+
     res.status(200).json({ data: document });
   });
 
-exports.getAll = (Model, modelName = "") =>
+// @desc    Get all documents with filtering, searching, sorting, and pagination
+export const getAll = (Model, modelName = "") =>
   asyncHandler(async (req, res) => {
     let filter = {};
     if (req.filterObject) {
       filter = req.filterObject;
     }
 
-    // Build query
-    // const documentsCounts = await Model.countDocuments();
+    // Build query with ApiFeatures
     const apiFeatures = new ApiFeatures(Model.find(filter), req.query)
       .filter()
       .search(modelName)
       .limitFields()
       .sort();
-    // .paginate();
-    // Apply pagination after filer and search
+
+    // Apply pagination after filter and search
     const docsCount = await Model.countDocuments(apiFeatures.mongooseQuery);
     apiFeatures.paginate(docsCount);
 
@@ -122,18 +132,21 @@ exports.getAll = (Model, modelName = "") =>
     const { mongooseQuery, paginationResult } = apiFeatures;
     const documents = await mongooseQuery;
 
-    // Set Images url
-    if (Model.collection.collectionName === "products") {
+    // Set image URLs for products
+    if (isProductsCollection(Model)) {
       documents.forEach((doc) => setImageUrl(doc));
     }
-    res
-      .status(200)
-      .json({ results: docsCount, paginationResult, data: documents });
+
+    res.status(200).json({
+      results: docsCount,
+      paginationResult,
+      data: documents,
+    });
   });
 
-exports.deleteAll = (Model) =>
+// @desc    Delete all documents (use with caution)
+export const deleteAll = (Model) =>
   asyncHandler(async (req, res, next) => {
     await Model.deleteMany();
-    // 204 no content
     res.status(204).send();
   });

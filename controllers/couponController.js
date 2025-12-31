@@ -1,27 +1,27 @@
-const factory = require('./handlersFactory');
-const Coupon = require('../models/couponModel');
+import * as factory from "./handlersFactory.js";
+import Coupon from "../models/couponModel.js";
 
 // @desc      Get all coupons
 // @route     GET /api/v1/coupons
 // @access    Private/Admin/Manager
-exports.getCoupons = factory.getAll(Coupon);
+export const getCoupons = factory.getAll(Coupon);
 
 // @desc      Get specific coupon by id
 // @route     GET /api/v1/coupons/:id
 // @access    Private/Admin/Manager
-exports.getCoupon = factory.getOne(Coupon);
+export const getCoupon = factory.getOne(Coupon);
 
 // @desc      Create coupon
 // @route     POST /api/v1/coupons
 // @access    Private/Admin/Manager
-exports.createCoupon = factory.createOne(Coupon);
+export const createCoupon = factory.createOne(Coupon);
 
 // @desc      Update coupon
 // @route     PATCH /api/v1/coupons/:id
 // @access    Private/Admin/Manager
-exports.updateCoupon = factory.updateOne(Coupon);
+export const updateCoupon = factory.updateOne(Coupon);
 
 // @desc     Delete coupon
 // @route    DELETE /api/v1/coupons/:id
 // @access   Private/Admin/Manager
-exports.deleteCoupon = factory.deleteOne(Coupon);
+export const deleteCoupon = factory.deleteOne(Coupon);

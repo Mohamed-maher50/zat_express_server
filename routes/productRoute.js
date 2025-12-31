@@ -1,23 +1,21 @@
-const express = require("express");
-const {
+import express from "express";
+import {
   getProduct,
   getProducts,
   createProduct,
   updateProduct,
   deleteProduct,
-} = require("../controllers/productController");
-const {
+} from "../controllers/productController.js";
+import {
   createProductValidator,
   getProductValidator,
   updateProductValidator,
   deleteProductValidator,
-} = require("../utils/validators/productValidator");
+} from "../utils/validators/productValidator.js";
 
-const authController = require("../controllers/authController");
-const reviewRoute = require("./reviewRoute");
-const {
-  executeDeletedMiddleware,
-} = require("../middlewares/softDeleteMiddleware");
+import * as authController from "../controllers/authController.js";
+import reviewRoute from "./reviewRoute.js";
+import { executeDeletedMiddleware } from "../middlewares/softDeleteMiddleware.js";
 
 const router = express.Router();
 
@@ -52,5 +50,4 @@ router
     deleteProductValidator,
     deleteProduct
   );
-
-module.exports = router;
+export default router;

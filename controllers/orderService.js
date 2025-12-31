@@ -1,35 +1,36 @@
-const asyncHandler = require("express-async-handler");
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+import asyncHandler from "express-async-handler";
+import Stripe from "stripe";
 
-const ApiError = require("../utils/apiError");
-const factory = require("./handlersFactory");
-const User = require("../models/userModel");
-const Product = require("../models/productModel");
-const Cart = require("../models/cartModel");
-const Order = require("../models/orderModel");
+import ApiError from "../utils/apiError.js";
+import * as factory from "./handlersFactory.js";
+import User from "../models/userModel.js";
+import Product from "../models/productModel.js";
+import Cart from "../models/cartModel.js";
+import Order from "../models/orderModel.js";
 
-// @desc    Create new order
-// @route   POST /api/orders/cartId
-// @access  Private/Protected/User
-exports.createCashOrder = asyncHandler(async (req, res, next) => {
-  // app settings
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+// @desc    Create new cash order
+// @route   POST /api/v1/orders/:cartId
+// @access  Private/User
+export const createCashOrder = asyncHandler(async (req, res, next) => {
   const taxPrice = 0;
   const shippingPrice = 0;
 
-  // 1) Get logged user cart
+  // Get logged user cart
   const cart = await Cart.findById(req.params.cartId);
   if (!cart) {
     return next(
-      new ApiError(`There is no cart for this user :${req.user._id}`, 404)
+      new ApiError(`There is no cart for this user: ${req.user._id}`, 404)
     );
   }
 
-  // 2) Check if there is coupon apply
+  // Calculate cart price (with or without coupon discount)
   const cartPrice = cart.totalPriceAfterDiscount
     ? cart.totalPriceAfterDiscount
     : cart.subtotal;
 
-  // 3) Create order with default cash option
+  // Create order with cash payment option
   const order = await Order.create({
     user: req.user._id,
     cartItems: cart.items,
@@ -37,15 +38,14 @@ exports.createCashOrder = asyncHandler(async (req, res, next) => {
     totalOrderPrice: taxPrice + shippingPrice + cartPrice,
   });
 
-  // 4) After creating order decrement product quantity, increment sold
-  // Performs multiple write operations with controls for order of execution.
-  const updateQueries = cart.items.map(async (f) =>
+  // Update product quantities and sales count
+  const updateQueries = cart.items.map((item) =>
     Product.updateOne(
-      { "variants.sku": f.variantSku }, // find the document with this variant
+      { "variants.sku": item.variantSku },
       {
         $inc: {
-          "variants.$.stock": -Number(f.quantity), // decrease stock
-          "variants.$.sold": Number(f.quantity), // increase sold
+          "variants.$.stock": -Number(item.quantity),
+          "variants.$.sold": Number(item.quantity),
         },
       }
     )
@@ -53,32 +53,39 @@ exports.createCashOrder = asyncHandler(async (req, res, next) => {
 
   if (order) {
     await Promise.all(updateQueries);
-    // 5) Clear cart
+    // Clear cart after order creation
     await Cart.findByIdAndDelete(req.params.cartId);
   }
 
   res.status(201).json({ status: "success", data: order });
 });
 
-// @desc    Get Specific order
-// @route   GET /api/orders/:id
-// @access  Private/Protected/User-Admin
-exports.getSpecificOrder = factory.getOne(Order);
+// @desc    Get specific order by ID
+// @route   GET /api/v1/orders/:id
+// @access  Private/User-Admin
+export const getSpecificOrder = factory.getOne(Order);
 
-exports.filterOrdersForLoggedUser = asyncHandler(async (req, res, next) => {
-  if (req.user.role === "user") req.filterObject = { user: req.user._id };
-  next();
-});
+// @desc    Filter orders for logged user
+// @route   Middleware for GET /api/v1/orders
+// @access  Private/User
+export const filterOrdersForLoggedUser = asyncHandler(
+  async (req, res, next) => {
+    if (req.user.role === "user") {
+      req.filterObject = { user: req.user._id };
+    }
+    next();
+  }
+);
 
-// @desc    Get my orders
-// @route   GET /api/orders
-// @access  Private/Protected/User-Admin
-exports.getAllOrders = factory.getAll(Order);
+// @desc    Get all orders
+// @route   GET /api/v1/orders
+// @access  Private/User-Admin
+export const getAllOrders = factory.getAll(Order);
 
-// @desc    Update  order to  paid
-// @route   PUT /api/orders/:id/pay
-// @access  Private/Protected/User-Admin
-exports.updateOrderToPaid = asyncHandler(async (req, res, next) => {
+// @desc    Update order status to paid
+// @route   PUT /api/v1/orders/:id/pay
+// @access  Private/User-Admin
+export const updateOrderToPaid = asyncHandler(async (req, res, next) => {
   const order = await Order.findById(req.params.id);
 
   if (!order) {
@@ -91,16 +98,17 @@ exports.updateOrderToPaid = asyncHandler(async (req, res, next) => {
   order.paidAt = Date.now();
 
   const updatedOrder = await order.save();
+
   res.status(200).json({
-    status: "Success",
+    status: "success",
     data: updatedOrder,
   });
 });
 
-// @desc    Update order to delivered
-// @route   PUT /api/orders/:id/deliver
+// @desc    Update order status to delivered
+// @route   PUT /api/v1/orders/:id/deliver
 // @access  Private/Admin
-exports.updateOrderToDelivered = asyncHandler(async (req, res, next) => {
+export const updateOrderToDelivered = asyncHandler(async (req, res, next) => {
   const order = await Order.findById(req.params.id);
 
   if (!order) {
@@ -113,77 +121,81 @@ exports.updateOrderToDelivered = asyncHandler(async (req, res, next) => {
   order.deliveredAt = Date.now();
 
   const updatedOrder = await order.save();
-  res.status(200).json({ status: "Success", data: updatedOrder });
+
+  res.status(200).json({
+    status: "success",
+    data: updatedOrder,
+  });
 });
 
-// @desc    Create order checkout session
-// @route   GET /api/orders/:cartId
+// @desc    Create checkout session for Stripe payment
+// @route   GET /api/v1/orders/checkout/:cartId
 // @access  Private/User
-exports.checkoutSession = asyncHandler(async (req, res, next) => {
-  // 1) Get the currently cart
+export const checkoutSession = asyncHandler(async (req, res, next) => {
+  // Get the current cart
   const cart = await Cart.findById(req.params.cartId);
   if (!cart) {
     return next(
-      new ApiError(`There is no cart for this user :${req.user._id}`, 404)
+      new ApiError(`There is no cart for this user: ${req.user._id}`, 404)
     );
   }
 
-  // 2) Get cart price, Check if there is coupon apply
+  // Calculate cart price with coupon discount if applied
   const cartPrice = cart.totalPriceAfterDiscount
     ? cart.totalPriceAfterDiscount
     : cart.totalCartPrice;
 
-  // 3) Create checkout session
+  // Create Stripe checkout session
   const session = await stripe.checkout.sessions.create({
     line_items: [
       {
         price_data: {
           currency: "egp",
-          unit_amount: cartPrice,
+          unit_amount: cartPrice * 100, // Convert to cents
           product_data: {
-            name: "T-shirt",
-            description: "Comfortable cotton t-shirt",
-            images: ["https://example.com/t-shirt.png"],
+            name: "Order Checkout",
+            description: "E-commerce order payment",
+            images: ["https://example.com/product.png"],
           },
         },
         quantity: 1,
       },
     ],
-
     mode: "payment",
-
-    // success_url: `${req.protocol}://${req.get('host')}/orders`,
-    success_url: `http://localhost:3000/user/allorders`,
-    // cancel_url: `${req.protocol}://${req.get('host')}/cart`,
-    cancel_url: `http://localhost:3000/cart`,
+    success_url: `${
+      process.env.CLIENT_URL || "http://localhost:3000"
+    }/user/allorders`,
+    cancel_url: `${process.env.CLIENT_URL || "http://localhost:3000"}/cart`,
     customer_email: req.user.email,
     client_reference_id: req.params.cartId,
     metadata: req.body.shippingAddress,
   });
 
-  // res.redirect(303, session.url);
-
-  // 3) Create session as response
   res.status(200).json({
     status: "success",
     session,
   });
 });
 
+// @desc    Create order after successful Stripe payment
+// @route   Internal function called by webhook
 const createOrderCheckout = async (session) => {
-  // 1) Get needed data from session
   const cartId = session.client_reference_id;
-  const checkoutAmount = session.display_items[0].amount / 100;
+  const checkoutAmount = session.amount_total / 100; // Convert from cents
   const shippingAddress = session.metadata;
 
-  // 2) Get Cart and User
+  // Get cart and user
   const cart = await Cart.findById(cartId);
   const user = await User.findOne({ email: session.customer_email });
 
-  //3) Create order
+  if (!cart || !user) {
+    throw new Error("Cart or user not found");
+  }
+
+  // Create order
   const order = await Order.create({
     user: user._id,
-    cartItems: cart.products,
+    cartItems: cart.items,
     shippingAddress,
     totalOrderPrice: checkoutAmount,
     paymentMethodType: "card",
@@ -191,29 +203,36 @@ const createOrderCheckout = async (session) => {
     paidAt: Date.now(),
   });
 
-  // 4) After creating order decrement product quantity, increment sold
-  // Performs multiple write operations with controls for order of execution.
+  // Update product quantities and sales count
   if (order) {
-    const bulkOption = cart.products.map((item) => ({
+    const bulkOption = cart.items.map((item) => ({
       updateOne: {
-        filter: { _id: item.product },
-        update: { $inc: { quantity: -item.count, sold: +item.count } },
+        filter: { "variants.sku": item.variantSku },
+        update: {
+          $inc: {
+            "variants.$.stock": -item.quantity,
+            "variants.$.sold": item.quantity,
+          },
+        },
       },
     }));
 
-    await Product.bulkWrite(bulkOption, {});
+    await Product.bulkWrite(bulkOption);
 
-    // 5) Clear cart
-    await Cart.findByIdAndDelete(cart._id);
+    // Clear cart after order creation
+    await Cart.findByIdAndDelete(cartId);
   }
+
+  return order;
 };
 
-// @desc    This webhook will run when stipe payment successfully paid
-// @route   PUT /webhook-checkout
-// @access  From stripe
-exports.webhookCheckout = (req, res, next) => {
+// @desc    Webhook handler for Stripe payment completion
+// @route   POST /webhook-checkout
+// @access  From Stripe
+export const webhookCheckout = (req, res, next) => {
   const signature = req.headers["stripe-signature"].toString();
   let event;
+
   try {
     event = stripe.webhooks.constructEvent(
       req.body,
@@ -224,8 +243,11 @@ exports.webhookCheckout = (req, res, next) => {
     return res.status(400).send(`Webhook error: ${err.message}`);
   }
 
+  // Handle successful checkout session
   if (event.type === "checkout.session.completed") {
-    createOrderCheckout(event.data.object);
+    createOrderCheckout(event.data.object).catch((err) => {
+      console.error("Error creating order from webhook:", err);
+    });
   }
 
   res.status(200).json({ received: true });

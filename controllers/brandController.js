@@ -1,14 +1,15 @@
-const { v4: uuidv4 } = require("uuid");
-const asyncHandler = require("express-async-handler");
+// brandController.js
+import { v4 as uuidv4 } from "uuid";
+import asyncHandler from "express-async-handler";
 
-const factory = require("./handlersFactory");
-const { uploadSingleImage } = require("../middlewares/imageUpload");
-const Brand = require("../models/brandModel");
+import * as factory from "./handlersFactory.js";
+import { uploadSingleImage } from "../middlewares/imageUpload.js";
+import Brand from "../models/brandModel.js";
 
-exports.uploadBrandImage = uploadSingleImage("image");
+export const uploadBrandImage = uploadSingleImage("image");
 
 // Resize image
-exports.resizeImage = asyncHandler(async (req, res, next) => {
+export const resizeImage = asyncHandler(async (req, res, next) => {
   if (!req.file) return next();
 
   // req.file.filename = `category-${uuidv4()}-${Date.now()}.jpeg`;
@@ -28,25 +29,26 @@ exports.resizeImage = asyncHandler(async (req, res, next) => {
 // @desc      Get all brands
 // @route     GET /api/v1/brands
 // @access    Public
-exports.getBrands = factory.getAll(Brand);
+export const getBrands = factory.getAll(Brand);
 
 // @desc      Get specific brand by id
 // @route     GET /api/v1/brands/:id
 // @access    Public
-exports.getBrand = factory.getOne(Brand);
+export const getBrand = factory.getOne(Brand);
+
 // @desc      Create brand
 // @route     POST /api/v1/brands
 // @access    Private
-exports.createBrand = factory.createOne(Brand);
+export const createBrand = factory.createOne(Brand);
 
 // @desc      Update brand
 // @route     PATCH /api/v1/brands/:id
 // @access    Private
-exports.updateBrand = factory.updateOne(Brand);
+export const updateBrand = factory.updateOne(Brand);
 
 // @desc     Delete brand
 // @route    DELETE /api/v1/brands/:id
 // @access   Private
-exports.deleteBrand = factory.softDeleteOne(Brand);
+export const deleteBrand = factory.softDeleteOne(Brand);
 
-exports.deleteAll = factory.deleteAll(Brand);
+export const deleteAll = factory.deleteAll(Brand);

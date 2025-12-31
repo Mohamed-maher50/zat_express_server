@@ -1,41 +1,48 @@
-const asyncHandler = require("express-async-handler");
+import asyncHandler from "express-async-handler";
 
-const ApiError = require("../utils/apiError");
-const Product = require("../models/productModel");
-const Cart = require("../models/cartModel");
-const Coupon = require("../models/couponModel");
+import ApiError from "../utils/apiError.js";
+import Product from "../models/productModel.js";
+import Cart from "../models/cartModel.js";
+import Coupon from "../models/couponModel.js";
 
 // @desc      Add product to cart
 // @route     POST /api/v1/cart
 // @access    Private/User
-exports.addProductToCart = asyncHandler(async (req, res, next) => {
+export const addProductToCart = asyncHandler(async (req, res, next) => {
   const { productId, variantSku, quantity } = req.body;
 
   const product = await Product.findById(productId, { isDeleted: false });
-  if (!product)
-    return next(new ApiError(`No Product found for this id: ${productId}`));
+  if (!product) {
+    return next(
+      new ApiError(`No Product found for this id: ${productId}`, 404)
+    );
+  }
 
   const variant = product.variants.find((v) => v.sku === variantSku);
-  if (!variant)
+  if (!variant) {
     return next(
-      new ApiError(`No Product variant found for this id: ${variantSku}`)
+      new ApiError(`No Product variant found for this sku: ${variantSku}`, 404)
     );
+  }
+
   const availableQuantity = quantity > variant.stock ? variant.stock : quantity;
-  // 1) Check if there is cart for logged user
+
+  // Check if cart exists for logged user
   let cart = await Cart.findOne({ user: req.user._id });
 
   if (cart) {
-    // 2) check if product exists with same variant for user cart
+    // Check if product with same variant exists in cart
     const itemIndex = cart.items.findIndex(
       (p) =>
-        p.product._id.toString() === req.body.productId &&
-        p.variantSku === variantSku
+        p.product._id.toString() === productId && p.variantSku === variantSku
     );
+
     if (itemIndex > -1) {
-      // if it exist increase quantity
+      // Update quantity if item exists
       const item = cart.items[itemIndex];
       item.quantity = quantity > variant.stock ? variant.stock : quantity;
     } else {
+      // Add new item if it doesn't exist
       cart.items.push({
         product: product._id,
         variantSku,
@@ -48,11 +55,8 @@ exports.addProductToCart = asyncHandler(async (req, res, next) => {
         },
       });
     }
-    // cart = await cart.save();
-    // return res.status(201).send(cart);
-  }
-  if (!cart) {
-    //no cart for user, create new cart
+  } else {
+    // Create new cart if it doesn't exist
     cart = await Cart.create({
       user: req.user._id,
       items: [
@@ -72,10 +76,7 @@ exports.addProductToCart = asyncHandler(async (req, res, next) => {
     cart = await cart.populate("items.product");
   }
 
-  // cart.totalCartPrice = totalPrice;
   cart = await cart.save();
-
-  // Calculate total cart price
 
   return res.status(200).json({
     status: "success",
@@ -85,16 +86,17 @@ exports.addProductToCart = asyncHandler(async (req, res, next) => {
   });
 });
 
-// @desc      Update product quantity
-// @route     Put /api/v1/cart/:itemId
+// @desc      Update product quantity in cart
+// @route     PUT /api/v1/cart/:sku
 // @access    Private/User
-exports.updateCartProductCount = asyncHandler(async (req, res, next) => {
+export const updateCartProductCount = asyncHandler(async (req, res, next) => {
   const { sku } = req.params;
   const { quantity: count } = req.body;
-  // 1) Check if there is cart for logged user
+
+  // Check if cart exists for logged user
   let cart = await Cart.findOne({ user: req.user._id }).populate({
     path: "items.product",
-    select: " variants ",
+    select: "variants",
   });
 
   if (!cart) {
@@ -103,23 +105,30 @@ exports.updateCartProductCount = asyncHandler(async (req, res, next) => {
     );
   }
 
-  // 2) check if product exists with same variant for user cart
+  // Find item with matching variant SKU
   const itemIndex = cart.items.findIndex((p) => sku === p.variantSku);
   if (itemIndex > -1) {
     const variant = cart.items[itemIndex].product.variants.find(
       (v) => v.sku === sku
     );
-    if (!variant)
-      return next(new ApiError(`No Product variant found for this id: ${sku}`));
-    // if it exist increase quantity
+    if (!variant) {
+      return next(
+        new ApiError(`No Product variant found for sku: ${sku}`, 404)
+      );
+    }
+
+    // Update quantity with stock limit
     const item = cart.items[itemIndex];
     item.quantity = count > variant.stock ? variant.stock : count;
   } else {
-    return next(new ApiError(`No Product Cart item found for this id: ${sku}`));
+    return next(
+      new ApiError(`No Product cart item found for sku: ${sku}`, 404)
+    );
   }
-  // Calculate total cart price
+
   cart = await cart.save();
   cart.depopulate("items.product");
+
   return res.status(200).json({
     status: "success",
     numOfCartItems: cart.items.length,
@@ -130,7 +139,7 @@ exports.updateCartProductCount = asyncHandler(async (req, res, next) => {
 // @desc      Get logged user cart
 // @route     GET /api/v1/cart
 // @access    Private/User
-exports.getLoggedUserCart = asyncHandler(async (req, res, next) => {
+export const getLoggedUserCart = asyncHandler(async (req, res, next) => {
   const cart = await Cart.findOne({ user: req.user._id });
 
   if (!cart) {
@@ -138,6 +147,7 @@ exports.getLoggedUserCart = asyncHandler(async (req, res, next) => {
       new ApiError(`No cart exist for this user: ${req.user._id}`, 404)
     );
   }
+
   return res.status(200).json({
     status: "success",
     numOfCartItems: cart.items.length,
@@ -146,10 +156,11 @@ exports.getLoggedUserCart = asyncHandler(async (req, res, next) => {
 });
 
 // @desc      Remove product from cart
-// @route     DELETE /api/v1/cart/:itemId
+// @route     DELETE /api/v1/cart/:sku
 // @access    Private/User
-exports.removeCartProduct = asyncHandler(async (req, res, next) => {
+export const removeCartProduct = asyncHandler(async (req, res, next) => {
   const { sku } = req.params;
+
   let cart = await Cart.findOneAndUpdate(
     { user: req.user._id },
     {
@@ -158,8 +169,14 @@ exports.removeCartProduct = asyncHandler(async (req, res, next) => {
     { new: true }
   );
 
-  // Calculate total cart price
+  if (!cart) {
+    return next(
+      new ApiError(`No cart exist for this user: ${req.user._id}`, 404)
+    );
+  }
+
   cart = await cart.save();
+
   return res.status(200).json({
     status: "success",
     numOfCartItems: cart.items.length,
@@ -170,27 +187,33 @@ exports.removeCartProduct = asyncHandler(async (req, res, next) => {
 // @desc      Clear logged user cart
 // @route     DELETE /api/v1/cart
 // @access    Private/User
-exports.clearLoggedUserCart = asyncHandler(async (req, res) => {
+export const clearLoggedUserCart = asyncHandler(async (req, res) => {
   await Cart.findOneAndDelete({ user: req.user._id });
-
   res.status(204).send();
 });
 
-// @desc      Apply coupon logged user cart
+// @desc      Apply coupon to logged user cart
 // @route     PUT /api/v1/cart/applyCoupon
 // @access    Private/User
-exports.applyCouponToCart = asyncHandler(async (req, res, next) => {
+export const applyCouponToCart = asyncHandler(async (req, res, next) => {
   const { couponName } = req.body;
 
-  // 2) Get current user cart
+  // Get current user cart
   let cart = await Cart.findOne({ user: req.user._id });
 
-  // 1) Get coupon based on it's unique name and expire > date.now
+  if (!cart) {
+    return next(
+      new ApiError(`No cart exist for this user: ${req.user._id}`, 404)
+    );
+  }
+
+  // Get coupon by name and check if it's valid and not expired
   const coupon = await Coupon.findOne({
     name: couponName,
     expire: { $gt: Date.now() },
     active: true,
   });
+
   if (!coupon) {
     return next(new ApiError("Coupon is invalid or has expired", 400));
   }
@@ -206,5 +229,3 @@ exports.applyCouponToCart = asyncHandler(async (req, res, next) => {
     data: cart,
   });
 });
-
-// update cartItem quantity

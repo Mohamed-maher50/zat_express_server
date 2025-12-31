@@ -1,5 +1,5 @@
-const express = require("express");
-const {
+import express from "express";
+import {
   createCashOrder,
   getSpecificOrder,
   filterOrdersForLoggedUser,
@@ -7,9 +7,9 @@ const {
   updateOrderToPaid,
   updateOrderToDelivered,
   checkoutSession,
-} = require("../controllers/orderService");
+} from "../controllers/orderService.js";
 
-const authController = require("../controllers/authController");
+import * as authController from "../controllers/authController.js";
 
 const router = express.Router();
 router.use(authController.auth);
@@ -34,5 +34,4 @@ router
 
 router.patch("/:id/pay", updateOrderToPaid);
 router.patch("/:id/deliver", updateOrderToDelivered);
-
-module.exports = router;
+export default router;

@@ -1,5 +1,8 @@
-const mongoose = require("mongoose");
-const { generateSku } = require("../utils/generateSku");
+// eslint-disable-next-line import/no-import-module-exports
+import mongoose from "mongoose";
+
+// eslint-disable-next-line import/no-import-module-exports
+import { generateSku } from "../utils/generateSku.js";
 
 const VariantSchema = new mongoose.Schema(
   {
@@ -197,7 +200,8 @@ productSchema.pre(/^find/, function (next) {
 });
 productSchema.index({ title: "text", description: "text" });
 productSchema.index({ category: 1, isActive: 1, ratingsAverage: -1 });
-module.exports = mongoose.model("Product", productSchema);
+export default mongoose.model("Product", productSchema);
+
 // const setImageUrl = (doc) => {
 //   if (doc.imageCover) {
 //     const imageCoverUrl = `${process.env.BASE_URL}/products/${doc.imageCover}`;

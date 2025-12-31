@@ -1,18 +1,18 @@
-const multer = require('multer');
+import multer from "multer";
+import ApiError from "../utils/apiError.js";
 
-const ApiError = require('../utils/apiError');
-
-// Upload single image => method return multer middleware
-exports.uploadSingleImage = (fieldName) => {
+// Upload single image => method returns multer middleware
+// eslint-disable-next-line import/prefer-default-export
+export const uploadSingleImage = (fieldName) => {
   // Storage
   const multerStorage = multer.memoryStorage();
 
   // Accept only images
-  const multerFilter = (req, file, cb) => {
-    if (file.mimetype.startsWith('image')) {
+  const multerFilter = (_req, file, cb) => {
+    if (file.mimetype.startsWith("image")) {
       cb(null, true);
     } else {
-      cb(new ApiError('only images allowed', 400), false);
+      cb(new ApiError("Only images allowed", 400), false);
     }
   };
 

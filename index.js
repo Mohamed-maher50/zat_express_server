@@ -1,41 +1,39 @@
-const path = require("path");
-const express = require("express");
-const dotenv = require("dotenv");
+import path from "path";
+import { fileURLToPath } from "url";
+import express from "express";
+import dotenv from "dotenv";
+import morgan from "morgan";
+import "colors";
+import compression from "compression";
+import cors from "cors";
+import bodyParser from "body-parser";
+import toobusy from "toobusy-js";
 
+import ApiError from "./utils/apiError.js";
+import globalError from "./middlewares/errorMiddleware.js";
+import mountRoutes from "./routes/index.js";
+import { webhookCheckout } from "./controllers/orderService.js";
+import dbConnection from "./config/database.js";
+
+// Get __dirname equivalent in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load environment variables
 dotenv.config({ path: "config.env" });
-const morgan = require("morgan");
-require("colors");
-const compression = require("compression");
-const cors = require("cors");
-const bodyParser = require("body-parser");
-
-const toobusy = require("toobusy-js");
-const ApiError = require("./utils/apiError");
-const globalError = require("./middlewares/errorMiddleware");
-const mountRoutes = require("./routes");
-const { webhookCheckout } = require("./controllers/orderService");
-const dbConnection = require("./config/database");
-
-// const categoryRouter = require("./routes/categoryRoute");
-// const subCategoryRouter = require("./routes/subCategoryRoute");
-// const brandRouter = require("./routes/brandRoute");
-// const productRouter = require("./routes/productRoute");
-// const userRouter = require("./routes/userRoute");
-// const authRouter = require("./routes/authRoute");
-// const reviewRouter = require("./routes/reviewRoute");
-// const wishlistRouter = require("./routes/wishlistRoute");
-// const addressRouter = require("./routes/addressRoute");
-// const couponRouter = require("./routes/couponRoute");
 
 // DB Connection
 dbConnection();
 
-// Builtin Middleware
+// Initialize Express app
 const app = express();
 
+// CORS Middleware
 app.use(cors());
 app.options("*", cors());
 app.enable("trust proxy");
+
+// Toobusy middleware for server load management
 app.use((req, res, next) => {
   if (toobusy()) {
     next(new ApiError("I'm busy right now, sorry.", 503));
@@ -44,60 +42,60 @@ app.use((req, res, next) => {
   }
 });
 
-// Add hook here before we call body parser, because stripe will send data in the body in form raw
+// Webhook endpoint (must be before body parser JSON middleware)
 app.post(
   "/webhook-checkout",
-  // express.raw({ type: 'application/json' }),
   bodyParser.raw({ type: "application/json" }),
   webhookCheckout
 );
 
-// Used to parse JSON bodies
+// Body parsing middlewares
 app.use(express.json());
-// app.use(cors());
-// app.options('*', cors());
-
-// Parse URL-encoded bodies
 app.use(express.urlencoded({ extended: true, limit: "10kb" }));
+
+// Static files
 app.use(express.static(path.join(__dirname, "uploads")));
 
+// Morgan logging middleware (development only)
 if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
-  // console.log(`Mode : ${process.env.NODE_ENV}`.yellow);
 }
 
+// Compression middleware
 app.use(compression());
 
-app.use(cors());
-
-// Mount routers
+// Mount all routes
 mountRoutes(app);
 
+// 404 - Route not found
 app.all("*", (req, res, next) => {
-  // 3) Use a generic api error
   next(new ApiError(`Can't find this route: ${req.originalUrl}`, 400));
 });
 
-// Global error handler to catch error from express error
-// 2) with refactoring
+// Global error handler
 app.use(globalError);
 
+// Start server
 const PORT = process.env.PORT || 8000;
+
 app.get("/", (req, res) => {
   res.json({ message: `server is running in PORT: ${PORT}` });
 });
+
 const server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`.green);
 });
+
+// Handle graceful shutdown
 process.on("SIGINT", () => {
   server.close();
-  // calling .shutdown allows your process to exit normally
   toobusy.shutdown();
   process.exit();
 });
-// we are listening to this unhandled rejection event, which then allow us to handle all
-// errors that occur in asynchronous code which were not previously handled
+
+// Handle unhandled promise rejections
 process.on("unhandledRejection", (err) => {
+  console.error("Unhandled Rejection:", err);
   server.close(() => {
     process.exit(1);
   });

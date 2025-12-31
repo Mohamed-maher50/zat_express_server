@@ -1,6 +1,7 @@
-const { validationResult } = require('express-validator');
+import { validationResult } from "express-validator";
 
-exports.validatorMiddleware = (req, res, next) => {
+// eslint-disable-next-line import/prefer-default-export
+export const validatorMiddleware = (req, res, next) => {
   // Finds the validation errors in this request and wraps them in an object with handy functions
   const errors = validationResult(req);
   if (!errors.isEmpty()) {

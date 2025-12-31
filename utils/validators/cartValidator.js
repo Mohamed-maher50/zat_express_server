@@ -1,11 +1,10 @@
-const { body, param } = require("express-validator");
-const {
-  validatorMiddleware,
-} = require("../../middlewares/validatorMiddleware");
+import { body, param } from "express-validator";
+import { validatorMiddleware } from "../../middlewares/validatorMiddleware.js";
 
 const quantityValidator = body("quantity")
   .isInt({ min: 1 })
   .withMessage("Quantity must be a positive integer");
+
 const SKU_REGEX = /^PROD-[A-Z0-9]{10}$/;
 
 const skuParamValidator = param("sku")
@@ -17,7 +16,7 @@ const skuParamValidator = param("sku")
   .notEmpty()
   .withMessage("SKU is required");
 
-exports.createItemValidator = [
+export const createItemValidator = [
   body("productId").isMongoId().withMessage("Invalid productId"),
   body("variantSku")
     .trim()
@@ -30,11 +29,12 @@ exports.createItemValidator = [
   validatorMiddleware,
 ];
 
-exports.updateItemValidator = [
+export const updateItemValidator = [
   skuParamValidator,
   body("quantity")
     .isInt({ min: 1 })
     .withMessage("Quantity must be a positive integer"),
   validatorMiddleware,
 ];
-exports.removeItemValidator = [skuParamValidator, validatorMiddleware];
+
+export const removeItemValidator = [skuParamValidator, validatorMiddleware];

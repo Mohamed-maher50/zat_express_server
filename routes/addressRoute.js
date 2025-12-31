@@ -1,25 +1,25 @@
-const express = require('express');
-const {
+import express from "express";
+import {
   addAddressToUser,
   removeAddress,
   myAddresses,
   updateAddress,
   getAddress,
-} = require('../controllers/addressController');
+} from "../controllers/addressController.js";
 
-const authController = require('../controllers/authController');
+import * as authController from "../controllers/authController.js";
 
 const router = express.Router();
 
 router
-  .route('/')
+  .route("/")
   .post(authController.auth, addAddressToUser)
   .get(authController.auth, myAddresses);
 
 router
-  .route('/:addressId')
+  .route("/:addressId")
   .get(authController.auth, getAddress)
   .delete(authController.auth, removeAddress)
   .put(authController.auth, updateAddress);
 
-module.exports = router;
+export default router;

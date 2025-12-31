@@ -1,14 +1,12 @@
-const { check, body } = require('express-validator');
-const {
-  validatorMiddleware,
-} = require('../../middlewares/validatorMiddleware');
-const Review = require('../../models/reviewModel');
+import { check, body } from "express-validator";
+import { validatorMiddleware } from "../../middlewares/validatorMiddleware.js";
+import Review from "../../models/reviewModel.js";
 
-// check() => check body and params etc
-exports.createReviewValidator = [
-  check('review')
+// Create Review Validator
+export const createReviewValidator = [
+  check("review")
     .notEmpty()
-    .withMessage('Review required')
+    .withMessage("Review required")
     .custom((val, { req }) =>
       Review.findOne({ user: req.body.user, product: req.body.product }).then(
         (review) => {
@@ -20,25 +18,27 @@ exports.createReviewValidator = [
         }
       )
     ),
-  check('rating')
+  check("rating")
     .notEmpty()
-    .withMessage('Review required')
+    .withMessage("Rating required")
     .isFloat({ min: 1, max: 5 })
-    .withMessage('Rating min value 1.0 and max 5.0'),
-  check('user').isMongoId().withMessage('Invalid User Id formate'),
-  check('product').isMongoId().withMessage('Invalid Product Id formate'),
+    .withMessage("Rating min value 1.0 and max 5.0"),
+  check("user").isMongoId().withMessage("Invalid User ID format"),
+  check("product").isMongoId().withMessage("Invalid Product ID format"),
   validatorMiddleware,
 ];
 
-exports.getReviewValidator = [
-  check('id').isMongoId().withMessage('Invalid ID formate'),
+// Get Review Validator
+export const getReviewValidator = [
+  check("id").isMongoId().withMessage("Invalid ID format"),
   validatorMiddleware,
 ];
 
-exports.updateReviewValidator = [
-  check('id')
+// Update Review Validator
+export const updateReviewValidator = [
+  check("id")
     .isMongoId()
-    .withMessage('Invalid ID formate')
+    .withMessage("Invalid ID format")
     .custom((val, { req }) =>
       Review.findOne({ _id: val }).then((review) => {
         if (!review) {
@@ -46,7 +46,6 @@ exports.updateReviewValidator = [
             new Error(`There is no review for this id ${val}`)
           );
         }
-
         if (review.user._id.toString() !== req.user._id.toString()) {
           return Promise.reject(
             new Error(`You are not allowed to perform this action`)
@@ -57,12 +56,13 @@ exports.updateReviewValidator = [
   validatorMiddleware,
 ];
 
-exports.deleteReviewValidator = [
-  check('id')
+// Delete Review Validator
+export const deleteReviewValidator = [
+  check("id")
     .isMongoId()
-    .withMessage('Invalid ID formate')
+    .withMessage("Invalid ID format")
     .custom((val, { req }) => {
-      if (req.user.role === 'user') {
+      if (req.user.role === "user") {
         return Review.findOne({ _id: val, user: req.user._id }).then(
           (review) => {
             if (!review) {
