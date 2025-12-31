@@ -66,7 +66,11 @@ app.use(compression());
 
 // Mount all routes
 mountRoutes(app);
+const PORT = process.env.PORT || 8000;
 
+app.get("/", (req, res) => {
+  res.json({ message: `server is running in PORT: ${PORT}` });
+});
 // 404 - Route not found
 app.all("*", (req, res, next) => {
   next(new ApiError(`Can't find this route: ${req.originalUrl}`, 400));
@@ -76,11 +80,6 @@ app.all("*", (req, res, next) => {
 app.use(globalError);
 
 // Start server
-const PORT = process.env.PORT || 8000;
-
-app.get("/", (req, res) => {
-  res.json({ message: `server is running in PORT: ${PORT}` });
-});
 
 const server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`.green);
