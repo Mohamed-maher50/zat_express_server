@@ -32,15 +32,15 @@ const app = express();
 app.use(cors());
 app.options("*", cors());
 app.enable("trust proxy");
-toobusy.maxLag(70); // جرب تزوده شوية
-// Toobusy middleware for server load management
-app.use((req, res, next) => {
-  if (toobusy()) {
-    next(new ApiError("I'm busy right now, sorry.", 503));
-  } else {
-    next();
-  }
-});
+// toobusy.maxLag(70); // جرب تزوده شوية
+// // Toobusy middleware for server load management
+// app.use((req, res, next) => {
+//   if (toobusy()) {
+//     next(new ApiError("I'm busy right now, sorry.", 503));
+//   } else {
+//     next();
+//   }
+// });
 
 // Webhook endpoint (must be before body parser JSON middleware)
 app.post(
