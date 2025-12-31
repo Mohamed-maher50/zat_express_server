@@ -1,11 +1,11 @@
-const mongoose = require('mongoose');
-const Product = require('./productModel');
+const mongoose = require("mongoose");
+const Product = require("./productModel");
 
 const reviewSchema = new mongoose.Schema(
   {
     review: {
       type: String,
-      required: [true, 'review title required'],
+      required: [true, "review title required"],
     },
     rating: {
       type: Number,
@@ -15,13 +15,18 @@ const reviewSchema = new mongoose.Schema(
     // Parent reference
     user: {
       type: mongoose.Schema.ObjectId,
-      ref: 'User',
-      required: [true, 'review must belong to user'],
+      ref: "User",
+      required: [true, "review must belong to user"],
     },
     product: {
       type: mongoose.Schema.ObjectId,
-      ref: 'Product',
-      required: [true, 'review must belong to product'],
+      ref: "Product",
+      required: [true, "review must belong to product"],
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+      select: false,
     },
   },
   {
@@ -31,8 +36,8 @@ const reviewSchema = new mongoose.Schema(
 
 reviewSchema.pre(/^find/, function (next) {
   this.populate({
-    path: 'user',
-    select: 'name profileImg',
+    path: "user",
+    select: "name profileImg",
   });
   next();
 });
@@ -47,8 +52,8 @@ reviewSchema.statics.calcAverageRatingsAndQuantity = async function (
     }, // Stage 1 "get all reviews in specific product"
     {
       $group: {
-        _id: 'product',
-        avgRating: { $avg: '$rating' },
+        _id: "product",
+        avgRating: { $avg: "$rating" },
         nRatings: { $sum: 1 },
       },
     }, // Stage 2
@@ -67,12 +72,12 @@ reviewSchema.statics.calcAverageRatingsAndQuantity = async function (
   }
 };
 
-reviewSchema.post('save', async function () {
+reviewSchema.post("save", async function () {
   await this.constructor.calcAverageRatingsAndQuantity(this.product);
 });
 
-reviewSchema.post('remove', async function () {
+reviewSchema.post("remove", async function () {
   await this.constructor.calcAverageRatingsAndQuantity(this.product);
 });
 
-module.exports = mongoose.model('Review', reviewSchema);
+module.exports = mongoose.model("Review", reviewSchema);

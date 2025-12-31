@@ -48,6 +48,6 @@ exports.updateBrand = factory.updateOne(Brand);
 // @desc     Delete brand
 // @route    DELETE /api/v1/brands/:id
 // @access   Private
-exports.deleteBrand = factory.deleteOne(Brand);
+exports.deleteBrand = factory.softDeleteOne(Brand);
 
 exports.deleteAll = factory.deleteAll(Brand);

@@ -18,7 +18,21 @@ const setImageUrl = (doc) => {
     doc.images = images;
   }
 };
+exports.softDeleteOne = (Model) =>
+  asyncHandler(async (req, res, next) => {
+    const document = await Model.findByIdAndUpdate(req.params.id, {
+      isDeleted: true,
+    });
 
+    if (!document) {
+      next(
+        new ApiError(`No document found for this id: ${req.params.id}`, 404)
+      );
+    }
+
+    // 204 no content
+    res.status(204).send();
+  });
 exports.deleteOne = (Model) =>
   asyncHandler(async (req, res, next) => {
     const document = await Model.findByIdAndDelete(req.params.id);
@@ -100,7 +114,6 @@ exports.getAll = (Model, modelName = "") =>
       .limitFields()
       .sort();
     // .paginate();
-
     // Apply pagination after filer and search
     const docsCount = await Model.countDocuments(apiFeatures.mongooseQuery);
     apiFeatures.paginate(docsCount);

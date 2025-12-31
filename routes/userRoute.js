@@ -1,4 +1,4 @@
-const express = require('express');
+const express = require("express");
 const {
   getUser,
   createUser,
@@ -10,7 +10,7 @@ const {
   updateLoggedUserData,
   getLoggedUserData,
   deleteLoggedUser,
-} = require('../controllers/userController');
+} = require("../controllers/userController");
 const {
   createUserValidator,
   updateUserValidator,
@@ -19,61 +19,70 @@ const {
   changeUserPasswordValidator,
   changeLoggedUserPassValidator,
   updateLoggedUserValidator,
-} = require('../utils/validators/userValidator');
-const authController = require('../controllers/authController');
+} = require("../utils/validators/userValidator");
+const authController = require("../controllers/authController");
+const {
+  executeDeletedMiddleware,
+} = require("../middlewares/softDeleteMiddleware");
 
 const router = express.Router();
 
 // user
 router.put(
-  '/changeMyPassword',
+  "/changeMyPassword",
   authController.auth,
   changeLoggedUserPassValidator,
   updateLoggedUserPassword
 );
 
 router.put(
-  '/updateMe',
+  "/updateMe",
   authController.auth,
   updateLoggedUserValidator,
   updateLoggedUserData
 );
-router.get('/getMe', authController.auth, getLoggedUserData, getUser);
-router.delete('/deleteMe', authController.auth, deleteLoggedUser);
+router.get(
+  "/getMe",
+  authController.auth,
+  getLoggedUserData,
+  executeDeletedMiddleware,
+  getUser
+);
+router.delete("/deleteMe", authController.auth, deleteLoggedUser);
 
 // Admin
 router.put(
-  '/change-password/:id',
+  "/change-password/:id",
   changeUserPasswordValidator,
   updateUserPassword
 );
 router
-  .route('/')
-  .get(authController.auth, authController.allowedTo('admin'), getUsers)
+  .route("/")
+  .get(authController.auth, authController.allowedTo("admin"), getUsers)
   .post(
     authController.auth,
-    authController.allowedTo('admin'),
+    authController.allowedTo("admin"),
     createUserValidator,
     createUser
   );
 
 router
-  .route('/:id')
+  .route("/:id")
   .get(
     authController.auth,
-    authController.allowedTo('admin'),
+    authController.allowedTo("admin"),
     getUserValidator,
     getUser
   )
   .put(
     authController.auth,
-    authController.allowedTo('admin'),
+    authController.allowedTo("admin"),
     updateUserValidator,
     updateUser
   )
   .delete(
     authController.auth,
-    authController.allowedTo('admin'),
+    authController.allowedTo("admin"),
     deleteUserValidator,
     deleteUser
   );

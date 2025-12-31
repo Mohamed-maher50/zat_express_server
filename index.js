@@ -9,11 +9,11 @@ const compression = require("compression");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 
+const toobusy = require("toobusy-js");
 const ApiError = require("./utils/apiError");
 const globalError = require("./middlewares/errorMiddleware");
 const mountRoutes = require("./routes");
 const { webhookCheckout } = require("./controllers/orderService");
-
 const dbConnection = require("./config/database");
 
 // const categoryRouter = require("./routes/categoryRoute");
@@ -36,6 +36,13 @@ const app = express();
 app.use(cors());
 app.options("*", cors());
 app.enable("trust proxy");
+app.use((req, res, next) => {
+  if (toobusy()) {
+    next(new ApiError("I'm busy right now, sorry.", 503));
+  } else {
+    next();
+  }
+});
 
 // Add hook here before we call body parser, because stripe will send data in the body in form raw
 app.post(
@@ -79,7 +86,12 @@ const PORT = process.env.PORT || 8000;
 const server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`.green);
 });
-
+process.on("SIGINT", () => {
+  server.close();
+  // calling .shutdown allows your process to exit normally
+  toobusy.shutdown();
+  process.exit();
+});
 // we are listening to this unhandled rejection event, which then allow us to handle all
 // errors that occur in asynchronous code which were not previously handled
 process.on("unhandledRejection", (err) => {

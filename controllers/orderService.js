@@ -25,30 +25,34 @@ exports.createCashOrder = asyncHandler(async (req, res, next) => {
   }
 
   // 2) Check if there is coupon apply
-  const cartPrice = cart.totalAfterDiscount
-    ? cart.totalAfterDiscount
-    : cart.totalCartPrice;
+  const cartPrice = cart.totalPriceAfterDiscount
+    ? cart.totalPriceAfterDiscount
+    : cart.subtotal;
 
   // 3) Create order with default cash option
   const order = await Order.create({
     user: req.user._id,
-    cartItems: cart.products,
+    cartItems: cart.items,
     shippingAddress: req.body.shippingAddress,
     totalOrderPrice: taxPrice + shippingPrice + cartPrice,
   });
 
   // 4) After creating order decrement product quantity, increment sold
   // Performs multiple write operations with controls for order of execution.
+  const updateQueries = cart.items.map(async (f) =>
+    Product.updateOne(
+      { "variants.sku": f.variantSku }, // find the document with this variant
+      {
+        $inc: {
+          "variants.$.stock": -Number(f.quantity), // decrease stock
+          "variants.$.sold": Number(f.quantity), // increase sold
+        },
+      }
+    )
+  );
+
   if (order) {
-    const bulkOption = cart.products.map((item) => ({
-      updateOne: {
-        filter: { _id: item.product },
-        update: { $inc: { quantity: -item.count, sold: +item.count } },
-      },
-    }));
-
-    await Product.bulkWrite(bulkOption, {});
-
+    await Promise.all(updateQueries);
     // 5) Clear cart
     await Cart.findByIdAndDelete(req.params.cartId);
   }
@@ -125,8 +129,8 @@ exports.checkoutSession = asyncHandler(async (req, res, next) => {
   }
 
   // 2) Get cart price, Check if there is coupon apply
-  const cartPrice = cart.totalAfterDiscount
-    ? cart.totalAfterDiscount
+  const cartPrice = cart.totalPriceAfterDiscount
+    ? cart.totalPriceAfterDiscount
     : cart.totalCartPrice;
 
   // 3) Create checkout session

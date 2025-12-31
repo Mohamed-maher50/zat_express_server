@@ -1,4 +1,4 @@
-const express = require('express');
+const express = require("express");
 const {
   getReview,
   getReviews,
@@ -7,42 +7,45 @@ const {
   deleteReview,
   setProductAndUserIds,
   createFilterObj,
-} = require('../controllers/reviewController');
+} = require("../controllers/reviewController");
 
 const {
   createReviewValidator,
   getReviewValidator,
   updateReviewValidator,
   deleteReviewValidator,
-} = require('../utils/validators/reviewValidator');
+} = require("../utils/validators/reviewValidator");
 
-const authController = require('../controllers/authController');
+const authController = require("../controllers/authController");
+const {
+  executeDeletedMiddleware,
+} = require("../middlewares/softDeleteMiddleware");
 
 const router = express.Router({ mergeParams: true });
 
 router
-  .route('/')
+  .route("/")
   .get(createFilterObj, getReviews)
   .post(
     authController.auth,
-    authController.allowedTo('user'),
+    authController.allowedTo("user"),
     setProductAndUserIds,
     createReviewValidator,
     createReview
   );
 
 router
-  .route('/:id')
-  .get(getReviewValidator, getReview)
+  .route("/:id")
+  .get(getReviewValidator, executeDeletedMiddleware, getReview)
   .put(
     authController.auth,
-    authController.allowedTo('user'),
+    authController.allowedTo("user"),
     updateReviewValidator,
     updateReview
   )
   .delete(
     authController.auth,
-    authController.allowedTo('user', 'manager', 'admin'),
+    authController.allowedTo("user", "manager", "admin"),
     deleteReviewValidator,
     deleteReview
   );

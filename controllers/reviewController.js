@@ -1,7 +1,7 @@
-const asyncHandler = require('express-async-handler');
+const asyncHandler = require("express-async-handler");
 
-const factory = require('./handlersFactory');
-const Review = require('../models/reviewModel');
+const factory = require("./handlersFactory");
+const Review = require("../models/reviewModel");
 
 // Middleware to create filterObject for get reviews In product
 exports.createFilterObj = (req, res, next) => {
@@ -41,4 +41,4 @@ exports.updateReview = factory.updateOne(Review);
 // @desc     Delete review
 // @route    DELETE /api/v1/reviews/:id
 // @access   Private/Protect
-exports.deleteReview = factory.deleteOne(Review);
+exports.deleteReview = factory.softDeleteOne(Review);

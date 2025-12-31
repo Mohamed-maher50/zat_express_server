@@ -87,4 +87,4 @@ exports.updateProduct = factory.updateOne(Product);
 // @desc     Delete product
 // @route    DELETE /api/v1/products/:id
 // @access   Private
-exports.deleteProduct = factory.deleteOne(Product);
+exports.deleteProduct = factory.softDeleteOne(Product);

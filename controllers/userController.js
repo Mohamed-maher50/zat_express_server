@@ -9,7 +9,7 @@ const User = require("../models/userModel");
 // @desc      Get all users
 // @route     GET /api/v1/users
 // @access    Private/Admin
-exports.getUsers = factory.getAll(User);
+exports.getUsers = factory.getAll(User, "Users");
 
 // @desc      Get specific user by id
 // @route     GET /api/v1/users/:id
@@ -44,6 +44,7 @@ exports.updateUser = asyncHandler(async (req, res, next) => {
       email: req.body.email,
       phone: req.body.phone,
       role: req.body.role,
+      isDeleted: req.body.isDeleted,
     },
     {
       new: true,
@@ -154,6 +155,6 @@ exports.getLoggedUserData = asyncHandler(async (req, res, next) => {
 // @route   PUT /api/v1/users/deleteMe
 // @access  Private/Protect
 exports.deleteLoggedUser = asyncHandler(async (req, res, next) => {
-  await User.findByIdAndUpdate(req.user._id, { active: false });
+  await User.findByIdAndUpdate(req.user._id, { isDeleted: false });
   res.status(204).json({ status: "Success" });
 });

@@ -75,6 +75,7 @@ exports.updateUserValidator = [
 
       return true;
     }),
+  body("isDeleted").optional().isBoolean().default(false),
   validatorMiddleware,
 ];
 

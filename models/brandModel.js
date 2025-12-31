@@ -13,8 +13,11 @@ const brandSchema = new mongoose.Schema(
       type: String,
       lowercase: true,
     },
-    image: {
-      type: String,
+    image: String,
+    isDeleted: {
+      type: Boolean,
+      default: false,
+      select: false,
     },
   },
   { timestamps: true }
@@ -30,21 +33,21 @@ more resources. this size of Indexes is bigger than the size of collection itsel
 // (Compound Field Index) => multi Index
 brandSchema.index({ name: 1 });
 
-const setImageUrl = (doc) => {
-  if (doc.image) {
-    //
-    const imageUrl = `${process.env.BASE_URL}/brands/${doc.image}`;
-    doc.image = imageUrl;
-  }
-};
+// const setImageUrl = (doc) => {
+//   if (doc.image) {
+//     //
+//     const imageUrl = `${process.env.BASE_URL}/brands/${doc.image}`;
+//     doc.image = imageUrl;
+//   }
+// };
 
-brandSchema.post("init", (doc) => {
-  setImageUrl(doc);
-});
+// brandSchema.post("init", (doc) => {
+//   setImageUrl(doc);
+// });
 
-brandSchema.post("save", (doc) => {
-  setImageUrl(doc);
-});
+// brandSchema.post("save", (doc) => {
+//   setImageUrl(doc);
+// });
 
 const Brand = mongoose.model("Brand", brandSchema);
 

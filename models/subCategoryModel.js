@@ -1,13 +1,13 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const subCategorySchema = new mongoose.Schema(
   {
     name: {
       type: String,
       trim: true,
-      unique: [true, 'Category must be unique'],
-      minlength: [2, 'Too short category name'],
-      maxlength: [32, 'Too long category name'],
+      unique: [true, "Category must be unique"],
+      minlength: [2, "Too short category name"],
+      maxlength: [32, "Too long category name"],
     },
     slug: {
       type: String,
@@ -15,11 +15,17 @@ const subCategorySchema = new mongoose.Schema(
     },
     category: {
       type: mongoose.Schema.ObjectId,
-      ref: 'Category',
-      required: [true, 'Sub Category must be belong to category'],
+      ref: "Category",
+      required: [true, "Sub Category must be belong to category"],
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+      select: false,
     },
   },
+
   { timestamps: true }
 );
 
-module.exports = mongoose.model('SubCategory', subCategorySchema);
+module.exports = mongoose.model("SubCategory", subCategorySchema);

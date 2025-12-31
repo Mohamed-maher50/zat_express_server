@@ -99,7 +99,6 @@ exports.auth = asyncHandler(async (req, res, next) => {
         )
       );
     }
-    // console.log(passChangedTimestamp, decoded.iat);
   }
   // Grant access to the protected routes
   req.user = currentUser;

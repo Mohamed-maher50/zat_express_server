@@ -6,11 +6,9 @@ class ApiFeatures {
 
   filter() {
     const queryStringObj = { ...this.queryString };
-
     const excludeFields = ["page", "sort", "limit", "fields"];
     excludeFields.forEach((field) => delete queryStringObj[field]);
     let queryStr = JSON.stringify(queryStringObj);
-    console.log(queryStr);
     queryStr = queryStr.replace(
       /\b(gte|gt|lte|lt|in)\b/g,
       (match) => `$${match}`
@@ -47,6 +45,16 @@ class ApiFeatures {
         query.$or = [
           { title: { $regex: this.queryString.keyword, $options: "i" } },
           { description: { $regex: this.queryString.keyword, $options: "i" } },
+        ];
+      } else if (modelName === "Users") {
+        query.$or = [
+          { name: { $regex: this.queryString.keyword, $options: "i" } },
+          {
+            email: {
+              $regex: this.queryString.keyword,
+              $options: "i",
+            },
+          },
         ];
       } else {
         query = { name: { $regex: this.queryString.keyword, $options: "i" } };

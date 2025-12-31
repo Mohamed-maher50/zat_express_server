@@ -1,25 +1,24 @@
 const mongoose = require("mongoose");
+const { nanoid } = require("nanoid");
+const { CartItemSchema } = require("./cartModel");
 // const autoIncrement = require('mongoose-auto-increment');
-
 // npm install --save --legacy-peer-deps mongoose-auto-increment
 const connection = mongoose.createConnection(process.env.DB_URI);
 // autoIncrement.initialize(connection);
 
 const orderSchema = new mongoose.Schema(
   {
+    publicId: {
+      type: String,
+      unique: true,
+      index: true,
+    },
     user: {
       type: mongoose.Schema.ObjectId,
       ref: "User",
       required: [true, "order must belong to user"],
     },
-    cartItems: [
-      {
-        product: { type: mongoose.Schema.ObjectId, ref: "Product" },
-        count: { type: Number, default: 1 },
-        color: String,
-        price: Number,
-      },
-    ],
+    cartItems: [CartItemSchema],
     shippingAddress: {
       details: String,
       phone: String,
@@ -63,9 +62,16 @@ orderSchema.pre(/^find/, function (next) {
     select: "name profileImg email phone",
   }).populate({
     path: "cartItems.product",
-    select: "title imageCover ratingsAverage ratingsQuantity",
+    select: "title imageCover ratingsAverage ratingsQuantity variants",
   });
 
+  next();
+});
+
+orderSchema.pre("save", function (next) {
+  if (this.isNew && !this.publicId) {
+    this.publicId = nanoid(10);
+  }
   next();
 });
 

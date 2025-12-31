@@ -7,8 +7,74 @@ const {
 const Category = require("../../models/categoryModel");
 const SubCategory = require("../../models/subCategoryModel");
 
-// check() => check check and params etc
 exports.createProductValidator = [
+  body("images")
+    .isArray({ min: 1 })
+    .withMessage("At least one image is required"),
+  body("images.*.url")
+    .notEmpty()
+    .withMessage("Image URL is required")
+    .matches(/^https?:\/\/.+\.(jpg|jpeg|png|gif|webp)$/i)
+    .withMessage("Invalid image URL"),
+  body("images.*.alt").optional().isString().trim(),
+  body("images.*.id").optional().isString(),
+  check("options")
+    .isArray({ min: 1 })
+    .withMessage("options must be at least one"),
+  body("options.*.name")
+    .notEmpty()
+    .withMessage("Option name is required")
+    .isString()
+    .withMessage("Option name must be a string"),
+
+  body("options.*.values")
+    .isArray({ min: 1 })
+    .withMessage("Option values must be a non-empty array"),
+  check("variants")
+    .isArray({ min: 1 })
+    .withMessage("At least one variant required")
+    .custom((variants, { req }) => {
+      const optionsMap = Object.fromEntries(
+        req.body.options.map((opt) => [opt.name, opt.values])
+      );
+
+      const allVariantsValid = variants.every((variant) =>
+        Object.entries(variant.attributes).every(([key, value]) => {
+          const allowedValues = optionsMap[key];
+          return allowedValues && allowedValues.includes(value);
+        })
+      );
+
+      if (!allVariantsValid) {
+        throw new Error("Invalid attributes provided for one or more variants");
+      }
+
+      return true;
+    }),
+
+  body("variants.*.price")
+    .isFloat({ min: 0 })
+    .withMessage("Price must be >= 0"),
+  body("variants.*.images")
+    .isArray({ min: 1 })
+    .withMessage("At least one image is required for each variant"),
+  body("variants.*.images.*.url")
+    .notEmpty()
+    .withMessage("Image URL is required")
+    .isString()
+    .withMessage("Image URL must be a string"),
+
+  body("variants.*.images.*.id")
+    .optional()
+    .isString()
+    .withMessage("Image id must be a string if provided"),
+  body("variants.*.stock").isInt({ min: 0 }).withMessage("Stock must be >= 0"),
+  body("variants.*.attributes").custom((attr, { req }) => {
+    if (!attr || Object.keys(attr).length === 0)
+      throw new Error("Attributes required");
+    return true;
+  }),
+
   check("title")
     .isLength({ min: 3 })
     .withMessage("must be at least 3 chars")
@@ -25,44 +91,27 @@ exports.createProductValidator = [
     .isLength({ max: 2000 })
     .withMessage("Too long description"),
 
-  check("quantity")
+  body("imageCover")
     .notEmpty()
-    .withMessage("Product quantity is required")
-    .isNumeric()
-    .withMessage("Product quantity must be a number"),
+    .withMessage("Product imageCover is required")
+    .isObject()
+    .withMessage("imageCover must be an object"),
 
-  check("sold")
-    .optional()
-    .isNumeric()
-    .withMessage("Product quantity must be a number"),
-
-  check("price")
+  // imageCover.url
+  body("imageCover.url")
     .notEmpty()
-    .withMessage("Product price is required")
-    .isNumeric()
-    .withMessage("Product price must be a number")
-    .isLength({ max: 32 })
-    .withMessage("To long price"),
+    .withMessage("imageCover url is required")
+    .isString()
+    .withMessage("imageCover url must be a string")
+    .isURL()
+    .withMessage("imageCover url must be a valid URL"),
 
-  check("priceAfterDiscount")
+  // imageCover.id (Cloudinary public_id)
+  body("imageCover.id")
     .optional()
-    .toFloat()
-    .isNumeric()
-    .withMessage("Product priceAfterDiscount must be a number")
-    .custom((value, { req }) => {
-      if (req.body.price <= value) {
-        throw new Error("priceAfterDiscount must be lower than price");
-      }
-      return true;
-    }),
+    .isString()
+    .withMessage("imageCover id must be a string"),
 
-  check("availableColors").optional().toArray(),
-  // check('imageCover').notEmpty().withMessage('Product imageCover is required'),
-  check("images")
-    .optional()
-    .toArray()
-    .isArray()
-    .withMessage("images should be array of string"),
   // 1- check if category exist in our db
   check("category")
     .notEmpty()
