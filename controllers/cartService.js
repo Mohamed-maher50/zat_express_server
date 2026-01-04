@@ -17,7 +17,6 @@ export const addProductToCart = asyncHandler(async (req, res, next) => {
       new ApiError(`No Product found for this id: ${productId}`, 404)
     );
   }
-
   const variant = product.variants.find((v) => v.sku === variantSku);
   if (!variant) {
     return next(
@@ -49,6 +48,7 @@ export const addProductToCart = asyncHandler(async (req, res, next) => {
         quantity: availableQuantity,
         price: variant.price,
         image: variant.images[0].url,
+        title: product.title,
         variant: {
           sku: variant.sku,
           attributes: variant.attributes,
@@ -66,6 +66,7 @@ export const addProductToCart = asyncHandler(async (req, res, next) => {
           variantSku,
           price: variant.price,
           image: variant.images[0].url,
+          title: product.title,
           variant: {
             sku: variant.sku,
             attributes: variant.attributes,
@@ -73,7 +74,6 @@ export const addProductToCart = asyncHandler(async (req, res, next) => {
         },
       ],
     });
-    cart = await cart.populate("items.product");
   }
 
   cart = await cart.save();

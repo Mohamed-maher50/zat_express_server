@@ -13,6 +13,11 @@ export const createCategoryValidator = [
       req.body.slug = slugify(val);
       return true;
     }),
+  check("image")
+    .notEmpty()
+    .withMessage("Image URL is required")
+    .matches(/^https?:\/\/.+\.(jpg|jpeg|png|gif|webp)$/i)
+    .withMessage("Invalid image URL"),
   validatorMiddleware,
 ];
 

@@ -12,6 +12,10 @@ const CartItemSchema = new mongoose.Schema(
       type: String,
       required: [true, "Variant SKU is required"],
     },
+    title: {
+      type: String,
+      required: true,
+    },
     image: String,
     variant: {
       sku: {

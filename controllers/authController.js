@@ -203,7 +203,6 @@ export const verifyPasswordResetCode = asyncHandler(async (req, res, next) => {
 // @access    Public
 export const resetPassword = asyncHandler(async (req, res, next) => {
   const user = await User.findOne({ email: req.body.email });
-
   if (!user) {
     return next(
       new ApiError(

@@ -14,6 +14,7 @@ import globalError from "./middlewares/errorMiddleware.js";
 import mountRoutes from "./routes/index.js";
 import { webhookCheckout } from "./controllers/orderService.js";
 import dbConnection from "./config/database.js";
+import { runSeed } from "./seed.js";
 
 // Get __dirname equivalent in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -21,7 +22,6 @@ const __dirname = path.dirname(__filename);
 
 // Load environment variables
 dotenv.config({ path: "config.env" });
-
 // DB Connection
 dbConnection();
 

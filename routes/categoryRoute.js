@@ -29,8 +29,8 @@ router
   .post(
     authController.auth,
     authController.allowedTo("admin", "manager"),
-    uploadCategoryImage,
-    resizeImage,
+    // uploadCategoryImage,
+    // resizeImage,
     createCategoryValidator,
     createCategory
   )
