@@ -119,7 +119,13 @@ const filterObject = (obj, ...allowedFields) => {
 // @route   PUT /api/v1/users/updateMe
 // @access  Private/Protect
 export const updateLoggedUserData = asyncHandler(async (req, res, next) => {
-  const allowedBodyFields = filterObject(req.body, "name", "email", "phone");
+  const allowedBodyFields = filterObject(
+    req.body,
+    "name",
+    "email",
+    "phone",
+    "image"
+  );
 
   const updatedUser = await User.findByIdAndUpdate(
     req.user.id,

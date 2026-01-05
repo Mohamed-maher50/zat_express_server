@@ -144,5 +144,12 @@ export const updateLoggedUserValidator = [
     .optional()
     .isMobilePhone("ar-EG")
     .withMessage("accept only egypt phone numbers"),
+  check("image")
+    .isURL({
+      host_whitelist: ["res.cloudinary.com"],
+      protocols: ["https"],
+    })
+    .withMessage("Must be a valid URL")
+    .optional(),
   validatorMiddleware,
 ];
