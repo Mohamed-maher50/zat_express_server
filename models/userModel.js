@@ -19,25 +19,16 @@ const userSchema = new mongoose.Schema(
       lowercase: true, // transform it to lowercase in the validation layer
     },
     phone: String,
-    image: String,
+    profileImg: String,
     password: {
       type: String,
       required: [true, "Please set your password"],
       minlength: [6, "password min length 6"],
-      select: false,
+      // select: false,
     },
-    passwordChangedAt: {
-      type: Date,
-      select: false,
-    },
-    passwordResetCode: {
-      type: String,
-      select: false,
-    },
-    passwordResetExpires: {
-      type: Date,
-      select: false,
-    },
+    passwordChangedAt: Date,
+    passwordResetCode: String,
+    passwordResetExpires: Date,
     resetCodeVerified: Boolean,
     role: {
       type: String,
@@ -48,7 +39,6 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
       index: true,
-      select: false,
     },
     wishlist: [
       {
