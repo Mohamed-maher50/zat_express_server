@@ -149,7 +149,7 @@ export const updateLoggedUserValidator = [
       host_whitelist: ["res.cloudinary.com"],
       protocols: ["https"],
     })
-    .withMessage("Must be a valid URL")
-    .optional(),
+
+    .optional({ nullable: true }),
   validatorMiddleware,
 ];
