@@ -19,7 +19,7 @@ const userSchema = new mongoose.Schema(
       lowercase: true, // transform it to lowercase in the validation layer
     },
     phone: String,
-    profileImg: String,
+    image: String,
     password: {
       type: String,
       required: [true, "Please set your password"],
