@@ -52,11 +52,13 @@ export const updateAddress = asyncHandler(async (req, res, next) => {
 
   const address = user.addresses.id(req.params.addressId);
 
-  address.alias = req.body.alias || address.alias;
-  address.details = req.body.details || address.details;
+  address.apartment = req.body.apartment || address.apartment;
+  address.address = req.body.address || address.address;
   address.phone = req.body.phone || address.phone;
   address.city = req.body.city || address.city;
-  address.postalCode = req.body.postalCode || address.postalCode;
+  address.governorate = req.body.governorate || address.governorate;
+  address.firstName = req.body.firstName || address.firstName;
+  address.lastName = req.body.lastName || address.lastName;
 
   await user.save();
 
