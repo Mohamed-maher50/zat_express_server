@@ -20,10 +20,19 @@ const orderSchema = new mongoose.Schema(
     },
     cartItems: [CartItemSchema],
     shippingAddress: {
-      details: String,
-      phone: String,
-      city: String,
-      postalCode: String,
+      address: String,
+      phone: { type: String, required: true },
+      city: { type: String, required: true },
+      governorate: { type: String, required: true },
+      apartment: String,
+      firstName: {
+        type: String,
+        required: true,
+      },
+      lastName: {
+        type: String,
+        required: true,
+      },
     },
     taxPrice: {
       type: Number,
