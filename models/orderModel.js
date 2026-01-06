@@ -42,7 +42,7 @@ const orderSchema = new mongoose.Schema(
       type: Number,
       default: 0.0,
     },
-    subTotal: {
+    subtotal: {
       type: Number,
       default: 0.0,
     },
