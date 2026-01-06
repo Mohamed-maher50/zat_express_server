@@ -42,6 +42,10 @@ const orderSchema = new mongoose.Schema(
       type: Number,
       default: 0.0,
     },
+    sutTotal: {
+      type: Number,
+      default: 0.0,
+    },
     totalOrderPrice: {
       type: Number,
       default: 0.0,

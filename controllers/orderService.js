@@ -36,6 +36,7 @@ export const createCashOrder = asyncHandler(async (req, res, next) => {
     cartItems: cart.items,
     shippingAddress: req.body.shippingAddress,
     totalOrderPrice: taxPrice + shippingPrice + cartPrice,
+    subtotal: cart.subtotal,
   });
 
   // Update product quantities and sales count
