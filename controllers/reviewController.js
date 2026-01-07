@@ -1,4 +1,3 @@
-import asyncHandler from "express-async-handler";
 import * as factory from "./handlersFactory.js";
 import Review from "../models/reviewModel.js";
 

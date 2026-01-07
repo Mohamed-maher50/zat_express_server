@@ -1,4 +1,4 @@
-import { check, body } from "express-validator";
+import { check } from "express-validator";
 import { validatorMiddleware } from "../../middlewares/validatorMiddleware.js";
 import Review from "../../models/reviewModel.js";
 
