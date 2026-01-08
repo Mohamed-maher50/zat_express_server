@@ -22,7 +22,7 @@ const router = express.Router({ mergeParams: true });
 
 router
   .route("/")
-  .get(createFilterObj, getReviews)
+  .get(createFilterObj, executeDeletedMiddleware, getReviews)
   .post(
     authController.auth,
     authController.allowedTo("user"),
