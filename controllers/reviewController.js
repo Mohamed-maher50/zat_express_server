@@ -40,4 +40,4 @@ export const updateReview = factory.updateOne(Review);
 // @desc      Delete review
 // @route     DELETE /api/v1/reviews/:id
 // @access    Private/Protect
-export const deleteReview = factory.softDeleteOne(Review);
+export const deleteReview = factory.deleteOne(Review);
