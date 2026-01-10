@@ -89,7 +89,7 @@ export const changeUserPasswordValidator = [
     .notEmpty()
     .withMessage("Password Required")
     .custom(async (val, { req }) => {
-      const user = await User.findById(req.params.id);
+      const user = await User.findById(req.params.id).select("+password");
       const isCorrectPassword = await bcrypt.compare(
         req.body.currentPassword,
         user.password
@@ -110,7 +110,7 @@ export const changeLoggedUserPassValidator = [
     .notEmpty()
     .withMessage("Password Required")
     .custom(async (val, { req }) => {
-      const user = await User.findById(req.user._id);
+      const user = await User.findById(req.user._id).select("+password");
       const isCorrectPassword = await bcrypt.compare(
         req.body.currentPassword,
         user.password

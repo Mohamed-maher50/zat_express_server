@@ -31,8 +31,9 @@ export const signup = asyncHandler(async (req, res, next) => {
 // @route     POST /api/v1/auth/login
 // @access    Public
 export const login = asyncHandler(async (req, res, next) => {
-  const user = await User.findOne({ email: req.body.email });
-
+  const user = await User.findOne({ email: req.body.email }).select(
+    "+password"
+  );
   let isCorrectPassword = false;
   if (user) {
     isCorrectPassword = await bcrypt.compare(req.body.password, user.password);
@@ -71,7 +72,9 @@ export const auth = asyncHandler(async (req, res, next) => {
 
   const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-  const currentUser = await User.findById(decoded.id);
+  const currentUser = await User.findById(decoded.id).select(
+    "+passwordChangedAt"
+  );
   if (!currentUser) {
     return next(
       new ApiError(
@@ -202,7 +205,9 @@ export const verifyPasswordResetCode = asyncHandler(async (req, res, next) => {
 // @route     POST /api/v1/auth/resetPassword
 // @access    Public
 export const resetPassword = asyncHandler(async (req, res, next) => {
-  const user = await User.findOne({ email: req.body.email });
+  const user = await User.findOne({ email: req.body.email }).select(
+    "+password +passwordResetCode +passwordResetExpires +resetCodeVerified"
+  );
   if (!user) {
     return next(
       new ApiError(

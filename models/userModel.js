@@ -24,12 +24,24 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: [true, "Please set your password"],
       minlength: [6, "password min length 6"],
-      // select: false,
+      select: false,
     },
-    passwordChangedAt: Date,
-    passwordResetCode: String,
-    passwordResetExpires: Date,
-    resetCodeVerified: Boolean,
+    passwordChangedAt: {
+      type: Date,
+      select: false,
+    },
+    passwordResetCode: {
+      type: String,
+      select: false,
+    },
+    passwordResetExpires: {
+      type: Date,
+      select: false,
+    },
+    resetCodeVerified: {
+      type: Boolean,
+      select: false,
+    },
     role: {
       type: String,
       enum: ["user", "manager", "admin"],
@@ -39,6 +51,7 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
       index: true,
+      select: false,
     },
     wishlist: [
       {
