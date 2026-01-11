@@ -22,8 +22,6 @@ const userSchema = new mongoose.Schema(
     image: String,
     password: {
       type: String,
-      required: [true, "Please set your password"],
-      minlength: [6, "password min length 6"],
       select: false,
     },
     passwordChangedAt: {

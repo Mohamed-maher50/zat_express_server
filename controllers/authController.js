@@ -6,7 +6,38 @@ import bcrypt from "bcryptjs";
 import ApiError from "../utils/apiError.js";
 import sendEmail from "../utils/sendEmail.js";
 import User from "../models/userModel.js";
+import { OAuth2Client } from "google-auth-library";
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+// @desc      Signup
+// @route     POST /api/v1/auth/signup
+// @access    Public
+export const google = asyncHandler(async (req, res, next) => {
+  const { id_token } = req.body;
+  if (!id_token) {
+    throw new ApiError("ID token is required", 400);
+  }
+  const ticket = await client.verifyIdToken({
+    idToken: id_token,
+    audience: process.env.GOOGLE_CLIENT_ID,
+  });
+  const payload = ticket.getPayload();
+  if (!payload) throw new ApiError("Invalid token payload", 404);
 
+  let user = await User.findOne({ email: payload.email });
+  if (!user) {
+    user = await User.create({
+      email: payload.email,
+      role: "user",
+      name: payload.name,
+      image: payload.picture,
+    });
+  }
+  const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRES_IN,
+  });
+
+  res.status(201).json({ data: user, token });
+});
 // @desc      Signup
 // @route     POST /api/v1/auth/signup
 // @access    Public

@@ -5,6 +5,7 @@ import {
   forgotPassword,
   verifyPasswordResetCode,
   resetPassword,
+  google,
 } from "../controllers/authController.js";
 
 import {
@@ -13,7 +14,7 @@ import {
 } from "../utils/validators/authValidator.js";
 
 const router = express.Router();
-
+router.post("/google", google);
 router.post("/signup", signupValidator, signup);
 router.post("/login", loginValidator, login);
 
