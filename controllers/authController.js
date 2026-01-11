@@ -7,6 +7,9 @@ import ApiError from "../utils/apiError.js";
 import sendEmail from "../utils/sendEmail.js";
 import User from "../models/userModel.js";
 import { OAuth2Client } from "google-auth-library";
+import dotenv from "dotenv";
+dotenv.config();
+
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 // @desc      Signup
 // @route     POST /api/v1/auth/signup
