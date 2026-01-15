@@ -174,8 +174,8 @@ export const checkoutSession = asyncHandler(async (req, res, next) => {
     line_items: lineItems,
 
     mode: "payment",
-    success_url: `${process.env.CLIENT_URL || "http://localhost:3000"}`,
-    cancel_url: `${process.env.CLIENT_URL || "http://localhost:3000"}`,
+    success_url: `${process.env.GOOGLE_CLIENT_ID || "http://localhost:3000"}`,
+    cancel_url: `${process.env.STRIPE_SUCCESS_URL || "http://localhost:3000"}`,
     customer_email: req.user.email,
     client_reference_id: req.params.cartId,
     metadata: req.body.shippingAddress,
