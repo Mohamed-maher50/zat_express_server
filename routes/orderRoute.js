@@ -14,7 +14,7 @@ import * as authController from "../controllers/authController.js";
 const router = express.Router();
 router.use(authController.auth);
 
-router.get("/checkout-session/:cartId", checkoutSession);
+router.post("/checkout-session/:cartId", checkoutSession);
 
 router
   .route("/:cartId")
