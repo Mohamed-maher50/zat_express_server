@@ -38,7 +38,7 @@
     "nanoid": "^5.1.6",
     "nodemailer": "^6.7.2",
     "slugify": "^1.6.3",
-    "stripe": "^8.210.0",
+    "stripe": "^20.1.2",
     "toobusy-js": "^0.5.1",
     "uuid": "^8.3.2"
   },

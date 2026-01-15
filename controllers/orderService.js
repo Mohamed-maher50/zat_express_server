@@ -134,42 +134,52 @@ export const updateOrderToDelivered = asyncHandler(async (req, res, next) => {
 // @access  Private/User
 export const checkoutSession = asyncHandler(async (req, res, next) => {
   // Get the current cart
-  const cart = await Cart.findById(req.params.cartId);
+  const cart = await Cart.findById(req.params.cartId).populate("items.product");
   if (!cart) {
     return next(
       new ApiError(`There is no cart for this user: ${req.user._id}`, 404)
     );
   }
 
-  // Calculate cart price with coupon discount if applied
-  const cartPrice = cart.totalPriceAfterDiscount
-    ? cart.totalPriceAfterDiscount
-    : cart.totalCartPrice;
+  let coupon;
+  if (cart.coupon) {
+    coupon = await stripe.coupons.create({
+      percent_off: cart.couponValue,
+      currency: "egp",
+      duration: "once",
+    });
+  }
 
+  const lineItems = cart.items.map((e) => ({
+    quantity: e.quantity,
+    price_data: {
+      currency: "egp",
+      unit_amount_decimal: e.price * 100,
+      product_data: {
+        name: e.product.title,
+        description: e.product.description,
+        images: e.product.images.map((i) => i.url),
+      },
+    },
+  }));
+  const discounts = coupon
+    ? [
+        {
+          coupon: coupon.id,
+        },
+      ]
+    : [];
   // Create Stripe checkout session
   const session = await stripe.checkout.sessions.create({
-    line_items: [
-      {
-        price_data: {
-          currency: "egp",
-          unit_amount: cartPrice * 100, // Convert to cents
-          product_data: {
-            name: "Order Checkout",
-            description: "E-commerce order payment",
-            images: ["https://example.com/product.png"],
-          },
-        },
-        quantity: 1,
-      },
-    ],
+    line_items: lineItems,
+
     mode: "payment",
-    success_url: `${
-      process.env.CLIENT_URL || "http://localhost:3000"
-    }/user/allorders`,
-    cancel_url: `${process.env.CLIENT_URL || "http://localhost:3000"}/cart`,
+    success_url: `${process.env.CLIENT_URL || "http://localhost:3000"}`,
+    cancel_url: `${process.env.CLIENT_URL || "http://localhost:3000"}`,
     customer_email: req.user.email,
     client_reference_id: req.params.cartId,
     metadata: req.body.shippingAddress,
+    discounts,
   });
 
   res.status(200).json({
@@ -180,19 +190,16 @@ export const checkoutSession = asyncHandler(async (req, res, next) => {
 
 // @desc    Create order after successful Stripe payment
 // @route   Internal function called by webhook
-const createOrderCheckout = async (session) => {
+const createOrderCheckout = async (session, next) => {
   const cartId = session.client_reference_id;
   const checkoutAmount = session.amount_total / 100; // Convert from cents
   const shippingAddress = session.metadata;
-
   // Get cart and user
   const cart = await Cart.findById(cartId);
   const user = await User.findOne({ email: session.customer_email });
-
   if (!cart || !user) {
     throw new Error("Cart or user not found");
   }
-
   // Create order
   const order = await Order.create({
     user: user._id,
@@ -243,9 +250,9 @@ export const webhookCheckout = (req, res, next) => {
   } catch (err) {
     return res.status(400).send(`Webhook error: ${err.message}`);
   }
-
   // Handle successful checkout session
   if (event.type === "checkout.session.completed") {
+    console.log("work");
     createOrderCheckout(event.data.object).catch((err) => {
       console.error("Error creating order from webhook:", err);
     });

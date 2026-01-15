@@ -57,8 +57,8 @@ dependencies:
     specifier: ^1.6.3
     version: 1.6.6
   stripe:
-    specifier: ^8.210.0
-    version: 8.222.0
+    specifier: ^20.1.2
+    version: 20.1.2
   toobusy-js:
     specifier: ^0.5.1
     version: 0.5.1
@@ -4185,11 +4185,15 @@ packages:
     engines: {node: '>=8'}
     dev: true
 
-  /stripe@8.222.0:
-    resolution: {integrity: sha512-hrA79fjmN2Eb6K3kxkDzU4ODeVGGjXQsuVaAPSUro6I9MM3X+BvIsVqdphm3BXWfimAGFvUqWtPtHy25mICY1w==}
-    engines: {node: ^8.1 || >=10.*}
+  /stripe@20.1.2:
+    resolution: {integrity: sha512-qU+lQRRJnTxmyvglYBPE24/IepncmywsAg0GDTsTdP2pb+3e3RdREHJZjKgqCmv0phPxN/nmgNPnIPPH8w0P4A==}
+    engines: {node: '>=16'}
+    peerDependencies:
+      '@types/node': '>=16'
+    peerDependenciesMeta:
+      '@types/node':
+        optional: true
     dependencies:
-      '@types/node': 25.0.6
       qs: 6.14.1
     dev: false
 
